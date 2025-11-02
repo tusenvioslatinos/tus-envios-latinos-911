@@ -23,6 +23,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
 
   const loadData = async () => {
     try {
+      console.log('[AppContext] Loading data from AsyncStorage...');
       const [storedRecipients, storedOrders, storedCurrency, storedCountry] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.RECIPIENTS),
         AsyncStorage.getItem(STORAGE_KEYS.ORDERS),
@@ -30,14 +31,36 @@ export const [AppProvider, useApp] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.USER_COUNTRY),
       ]);
 
-      if (storedRecipients) setRecipients(JSON.parse(storedRecipients));
-      if (storedOrders) setOrders(JSON.parse(storedOrders));
-      if (storedCurrency) setCurrency(storedCurrency as Currency);
-      if (storedCountry) setUserCountry(storedCountry);
+      if (storedRecipients) {
+        try {
+          setRecipients(JSON.parse(storedRecipients));
+          console.log('[AppContext] Recipients loaded:', JSON.parse(storedRecipients).length);
+        } catch (e) {
+          console.error('[AppContext] Error parsing recipients:', e);
+        }
+      }
+      if (storedOrders) {
+        try {
+          setOrders(JSON.parse(storedOrders));
+          console.log('[AppContext] Orders loaded:', JSON.parse(storedOrders).length);
+        } catch (e) {
+          console.error('[AppContext] Error parsing orders:', e);
+        }
+      }
+      if (storedCurrency) {
+        setCurrency(storedCurrency as Currency);
+        console.log('[AppContext] Currency loaded:', storedCurrency);
+      }
+      if (storedCountry) {
+        setUserCountry(storedCountry);
+        console.log('[AppContext] Country loaded:', storedCountry);
+      }
+      console.log('[AppContext] Data loaded successfully');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('[AppContext] Error loading data:', error);
     } finally {
       setIsLoading(false);
+      console.log('[AppContext] Loading complete');
     }
   };
 

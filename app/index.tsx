@@ -26,7 +26,7 @@ export default function WelcomeScreen() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    router.replace('/home');
+    router.replace('/(tabs)/home');
   };
 
   if (isLoading || !showContent) {

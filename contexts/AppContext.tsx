@@ -114,17 +114,17 @@ export const [AppProvider, useApp] = createContextHook(() => {
     
     let newCurrency: Currency = 'EUR';
     
-    const normalizedCountry = country.toLowerCase();
+    const normalizedCountry = country.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     
     if (normalizedCountry.includes('united states') || normalizedCountry.includes('estados unidos')) {
       newCurrency = 'USD';
-    } else if (normalizedCountry.includes('mexico') || normalizedCountry.includes('méxico')) {
+    } else if (normalizedCountry.includes('mexico')) {
       newCurrency = 'MXN';
     } else {
       newCurrency = 'EUR';
     }
     
-    console.log('[AppContext] Country:', country, '→ Currency:', newCurrency);
+    console.log('[AppContext] Country:', country, '→ Normalized:', normalizedCountry, '→ Currency:', newCurrency);
     await updateCurrency(newCurrency);
   }, [updateCurrency]);
 

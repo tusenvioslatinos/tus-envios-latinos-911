@@ -61,7 +61,7 @@ export default function WelcomeScreen() {
       colors={[Colors.gradientStart, Colors.gradientEnd]}
       style={styles.container}
     >
-      <View style={[styles.content, { paddingTop: 80 + insets.top, paddingBottom: 48 + insets.bottom }]}>
+      <View style={[styles.content, { paddingTop: insets.top, paddingBottom: 48 + insets.bottom }]}>
         <View style={styles.logoContainer}>
           <Image 
             source={{ uri: 'https://rork.app/pa/34z6c325dcpuojgjmfr7a/logo' }}
@@ -110,11 +110,12 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
   logo: {
-    width: 180,
-    height: 180,
+    width: 160,
+    height: 160,
   },
   logoLarge: {
     width: 200,

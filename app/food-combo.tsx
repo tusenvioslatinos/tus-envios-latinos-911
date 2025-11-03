@@ -75,11 +75,7 @@ export default function FoodComboScreen() {
 
       await sendOrderViaWhatsApp(order);
       
-      Alert.alert(
-        '¡Orden Enviada!',
-        'Tu orden ha sido enviada por WhatsApp. Recibirás las instrucciones de pago.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      router.back();
     } catch {
       Alert.alert('Error', 'No se pudo enviar la orden. Intenta nuevamente.');
     } finally {

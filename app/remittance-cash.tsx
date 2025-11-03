@@ -97,6 +97,12 @@ export default function RemittanceCashScreen() {
         senderPhone: senderPhone.trim(),
         senderEmail: senderEmail.trim() || undefined,
         senderCountry: userCountry || 'United States',
+        details: {
+          receiveCurrency: receiveCurrency,
+          amountToReceive: amountToReceive,
+          messengingCost: messengingCost,
+          totalAmount: totalAmount,
+        },
       });
 
       await sendOrderViaWhatsApp(order);

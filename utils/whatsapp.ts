@@ -57,9 +57,46 @@ function formatFoodComboMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'
   return message;
 }
 
+function formatRemittanceCashMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+  const flag = getCountryFlag(order.senderCountry);
+  const orderId = generateRandomId();
+  const currencySymbol = CURRENCY_SYMBOLS[order.currency];
+  const receiveCurrency = (order.details?.receiveCurrency as string) || 'USD';
+  
+  const address = order.recipient.address || '';
+  const municipality = order.recipient.municipality || '';
+  const province = order.recipient.province || '';
+  const fullAddress = `${address}, ${municipality}, ${province}`;
+  
+  const messengingCost = order.details?.messengingCost || 0;
+  const totalAmount = order.details?.totalAmount || order.amount;
+  
+  let message = `${flag} *RESUMEN DE ENTREGA*\n`;
+  message += `📝ID: ${orderId}\n`;
+  message += `💵Cantidad: ${order.details?.amountToReceive?.toFixed(2) || '0.00'} ${receiveCurrency}\n`;
+  message += `🏘️Dirección: ${fullAddress}\n`;
+  message += `👤Recibe: ${order.recipient.name}\n`;
+  message += `📱Contacto: ${order.recipient.phone}\n`;
+  message += `👨‍⚕️Envía: ${order.senderName}\n`;
+  
+  if (messengingCost > 0) {
+    message += `🚚Mensajería: ${currencySymbol}${messengingCost.toFixed(2)} ${order.currency}\n`;
+  } else {
+    message += `🚚Mensajería: Gratis\n`;
+  }
+  
+  message += `💰Monto a pagar: ${currencySymbol}${totalAmount.toFixed(2)} ${order.currency}`;
+  
+  return message;
+}
+
 function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
   if (order.type === 'food-combo') {
     return formatFoodComboMessage(order);
+  }
+  
+  if (order.type === 'remittance-cash') {
+    return formatRemittanceCashMessage(order);
   }
   
   const currencySymbol = CURRENCY_SYMBOLS[order.currency];
@@ -83,16 +120,6 @@ function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): 
   message += `👤 *Información del Destinatario*\n`;
   message += `Nombre: ${order.recipient.name}\n`;
   message += `Teléfono: ${order.recipient.phone}\n`;
-  
-  if (order.type === 'remittance-cash' && order.recipient.address) {
-    message += `Dirección: ${order.recipient.address}\n`;
-    if (order.recipient.province) {
-      message += `Provincia: ${order.recipient.province}\n`;
-    }
-    if (order.recipient.municipality) {
-      message += `Municipio: ${order.recipient.municipality}\n`;
-    }
-  }
   
   if (order.type === 'remittance-card' && order.details?.cardCurrency) {
     const cardCurrency = order.details.cardCurrency as CardCurrency;

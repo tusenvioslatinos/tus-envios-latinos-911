@@ -61,8 +61,9 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
         
         if (normalizedCountry && (currencyType === 'USD' || currencyType === 'MLC' || currencyType === 'CUP')) {
           rates[normalizedCountry][currencyType] = value;
-        } else if (normalizedCountry && currencyType === 'USD') {
-          rates[normalizedCountry].CLASICA = value;
+          if (currencyType === 'USD') {
+            rates[normalizedCountry].CLASICA = value;
+          }
         }
       }
     }

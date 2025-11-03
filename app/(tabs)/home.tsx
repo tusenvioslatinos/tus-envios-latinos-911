@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Image } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { DollarSign, ShoppingBag, Smartphone, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,7 +50,7 @@ function ServiceCard({ title, description, icon, gradient, onPress }: ServiceCar
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { currency, userCountry, orders } = useApp();
+  const { currency, userCountry } = useApp();
 
   const handleNavigation = (path: string) => {
     if (Platform.OS !== 'web') {
@@ -58,8 +58,6 @@ export default function HomeScreen() {
     }
     router.push(path as any);
   };
-
-  const recentOrdersCount = orders.length;
 
   return (
     <>
@@ -75,13 +73,13 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {recentOrdersCount > 0 && (
-          <View style={styles.statsCard}>
-            <Text style={styles.statsLabel}>Tus envíos</Text>
-            <Text style={styles.statsValue}>{recentOrdersCount}</Text>
-            <Text style={styles.statsSubtext}>órdenes realizadas</Text>
-          </View>
-        )}
+        <View style={styles.logoContainer}>
+          <Image
+            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/y4v9rui8pzmqgrrt8jo08' }}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
 
         <View style={styles.servicesContainer}>
           <Text style={styles.sectionTitle}>Nuestros Servicios</Text>
@@ -179,32 +177,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold' as const,
     color: '#FFFFFF',
   },
-  statsCard: {
-    backgroundColor: Colors.surface,
-    padding: 24,
-    borderRadius: 20,
-    marginBottom: 32,
+  logoContainer: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    marginBottom: 32,
+    paddingVertical: 20,
   },
-  statsLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 8,
-  },
-  statsValue: {
-    fontSize: 48,
-    fontWeight: 'bold' as const,
-    color: Colors.primary,
-    marginBottom: 4,
-  },
-  statsSubtext: {
-    fontSize: 14,
-    color: Colors.textLight,
+  logo: {
+    width: 200,
+    height: 120,
   },
   servicesContainer: {
     marginBottom: 32,

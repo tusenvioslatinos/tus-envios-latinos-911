@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Alert, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
@@ -23,6 +23,7 @@ export default function RemittanceCardScreen() {
   const [senderName, setSenderName] = useState('');
   const [senderPhone, setSenderPhone] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState<'CLASICA' | 'MLC' | 'CUP'>('MLC');
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
 
@@ -36,7 +37,7 @@ export default function RemittanceCardScreen() {
     queryFn: fetchLocations,
   });
 
-  const cardCurrency = recipient?.cardCurrency || 'MLC';
+  const cardCurrency = selectedCurrency;
 
   const deliveryCost = recipient && locationData && recipient.province && recipient.municipality
     ? getDeliveryCost(recipient.province, recipient.municipality, userCountry || '', locationData)
@@ -130,14 +131,34 @@ export default function RemittanceCardScreen() {
                 <Text style={styles.cardLabel}>Tarjeta:</Text>
                 <Text style={styles.cardNumber}>{recipient.cardNumber}</Text>
               </View>
-              {recipient.cardCurrency && (
-                <View style={styles.currencyBadge}>
-                  <Text style={styles.currencyBadgeText}>{recipient.cardCurrency}</Text>
-                </View>
-              )}
             </View>
           </View>
         )}
+
+        <View style={styles.currencySelector}>
+          <Text style={styles.currencySelectorLabel}>Moneda a recibir:</Text>
+          <View style={styles.currencyButtons}>
+            {(['CLASICA', 'MLC', 'CUP'] as const).map((curr) => (
+              <TouchableOpacity
+                key={curr}
+                style={[
+                  styles.currencyButton,
+                  selectedCurrency === curr && styles.currencyButtonActive
+                ]}
+                onPress={() => setSelectedCurrency(curr)}
+              >
+                <Text
+                  style={[
+                    styles.currencyButtonText,
+                    selectedCurrency === curr && styles.currencyButtonTextActive
+                  ]}
+                >
+                  {curr}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
         <FormInput
           label="Monto a recibir"
@@ -332,5 +353,40 @@ const styles = StyleSheet.create({
   rateLoadingText: {
     fontSize: 14,
     color: Colors.textSecondary,
+  },
+  currencySelector: {
+    marginBottom: 20,
+  },
+  currencySelectorLabel: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 12,
+  },
+  currencyButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  currencyButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  currencyButtonActive: {
+    backgroundColor: '#7C3AED',
+    borderColor: '#7C3AED',
+  },
+  currencyButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  currencyButtonTextActive: {
+    color: '#FFFFFF',
   },
 });

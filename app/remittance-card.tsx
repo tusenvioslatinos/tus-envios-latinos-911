@@ -12,7 +12,6 @@ import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 import { useQuery } from '@tanstack/react-query';
 import { fetchExchangeRates, getExchangeRate } from '@/services/exchangeRates';
-import { fetchLocations, getDeliveryCost } from '@/services/locations';
 
 export default function RemittanceCardScreen() {
   const router = useRouter();
@@ -35,16 +34,7 @@ export default function RemittanceCardScreen() {
     queryFn: fetchExchangeRates,
   });
 
-  const { data: locationData, isLoading: locationsLoading } = useQuery({
-    queryKey: ['locations'],
-    queryFn: fetchLocations,
-  });
-
   const cardCurrency = selectedCurrency;
-
-  const deliveryCost = recipient && locationData && recipient.province && recipient.municipality
-    ? getDeliveryCost(recipient.province, recipient.municipality, userCountry || '', locationData)
-    : 0;
 
   const amountToReceive = amount ? parseFloat(amount) : 0;
   const exchangeRate = exchangeRates && userCountry
@@ -53,7 +43,7 @@ export default function RemittanceCardScreen() {
   const totalToSend = amountToReceive && exchangeRate
     ? amountToReceive * exchangeRate
     : 0;
-  const totalAmount = totalToSend + deliveryCost;
+  const totalAmount = totalToSend;
 
   const handleAddCardToRecipient = (recipientToUpdate: Recipient, cardCurrency: CardCurrency) => {
     console.log('[RemittanceCard] Request to add card:', cardCurrency, 'to recipient:', recipientToUpdate.name);
@@ -233,22 +223,13 @@ export default function RemittanceCardScreen() {
         />
 
         <View style={styles.summaryCard}>
-          {ratesLoading || locationsLoading ? (
+          {ratesLoading ? (
             <View style={styles.rateLoading}>
               <ActivityIndicator size="small" color="#7C3AED" />
               <Text style={styles.rateLoadingText}>Cargando tasas...</Text>
             </View>
           ) : (
             <>
-              {deliveryCost > 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Costo de mensajería:</Text>
-                  <Text style={styles.summaryValue}>
-                    {currencySymbol}{deliveryCost.toFixed(2)} {currency}
-                  </Text>
-                </View>
-              )}
-              {deliveryCost > 0 && <View style={styles.dividerSmall} />}
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Total a pagar:</Text>
                 <Text style={styles.summaryValue}>

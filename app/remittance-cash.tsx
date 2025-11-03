@@ -39,6 +39,9 @@ export default function RemittanceCashScreen() {
     ? getDeliveryCost(recipient.province, recipient.municipality, userCountry || '', locationData)
     : 0;
 
+  console.log('[RemittanceCash] recipient:', recipient ? { province: recipient.province, municipality: recipient.municipality } : null);
+  console.log('[RemittanceCash] userCountry:', userCountry);
+
   const amountToReceive = amount ? parseFloat(amount) : 0;
   const exchangeRate = exchangeRates && userCountry
     ? getExchangeRate(userCountry, receiveCurrency, exchangeRates)

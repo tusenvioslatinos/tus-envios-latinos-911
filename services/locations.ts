@@ -88,18 +88,29 @@ export function getDeliveryCost(
   country: string,
   locationData: LocationData
 ): number {
+  console.log('[Locations] getDeliveryCost called with:', { province, municipality, country });
+  console.log('[Locations] Total locations available:', locationData.locations.length);
+  
   const location = locationData.locations.find(
     loc => loc.province === province && loc.municipality === municipality
   );
   
   if (!location) {
     console.warn('[Locations] Location not found:', { province, municipality });
+    console.log('[Locations] Available locations:', locationData.locations.slice(0, 5));
     return 0;
   }
+  
+  console.log('[Locations] Location found:', location);
   
   const normalizedCountry = country.includes('Europe') || country === 'España' || country === 'Spain' 
     ? 'Europa' 
     : country as keyof Location['deliveryCost'];
   
-  return location.deliveryCost[normalizedCountry] || 0;
+  console.log('[Locations] Normalized country:', normalizedCountry);
+  
+  const cost = location.deliveryCost[normalizedCountry] || 0;
+  console.log('[Locations] Delivery cost:', cost);
+  
+  return cost;
 }

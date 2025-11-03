@@ -20,6 +20,28 @@ export interface ExchangeRates {
   };
 }
 
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  result.push(current.trim());
+  return result;
+}
+
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
   try {
     console.log('[ExchangeRates] Fetching exchange rates from CSV...');
@@ -37,11 +59,11 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
     console.log('[ExchangeRates] Total lines:', lines.length);
     
     for (let i = 0; i < lines.length && i < 9; i++) {
-      const columns = lines[i].split(',');
+      const columns = parseCSVLine(lines[i]);
       console.log(`[ExchangeRates] Line ${i}:`, columns);
       
-      if (columns.length > 2) {
-        const value = parseFloat(columns[2].trim()) || 0;
+      if (columns.length >= 3) {
+        const value = parseFloat(columns[2]) || 0;
         console.log(`[ExchangeRates] Line ${i} value in column C:`, value);
         
         if (i === 0) rates['United States'].CLASICA = value;
@@ -73,9 +95,15 @@ export function getExchangeRate(
   cardCurrency: CardCurrency,
   rates: ExchangeRates
 ): number {
-  const normalizedCountry = country.includes('Europe') || country === 'España' || country === 'Spain' 
-    ? 'Europa' 
-    : country;
+  let normalizedCountry = country;
+  
+  if (country.includes('Europe') || country === 'España' || country === 'Spain') {
+    normalizedCountry = 'Europa';
+  } else if (country === 'Estados Unidos' || country === 'USA') {
+    normalizedCountry = 'United States';
+  } else if (country === 'México') {
+    normalizedCountry = 'Mexico';
+  }
   
   const countryRates = rates[normalizedCountry as keyof ExchangeRates];
   

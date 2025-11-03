@@ -42,6 +42,12 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
+function parseDecimalValue(value: string): number {
+  const cleaned = value.replace(/"/g, '').trim();
+  const normalized = cleaned.replace(',', '.');
+  return parseFloat(normalized) || 0;
+}
+
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
   try {
     console.log('[ExchangeRates] Fetching exchange rates from CSV...');
@@ -63,8 +69,9 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
       console.log(`[ExchangeRates] Line ${i}:`, columns);
       
       if (columns.length >= 3) {
-        const value = parseFloat(columns[2]) || 0;
-        console.log(`[ExchangeRates] Line ${i} value in column C:`, value);
+        const rawValue = columns[2];
+        const value = parseDecimalValue(rawValue);
+        console.log(`[ExchangeRates] Line ${i} raw value:`, rawValue, '→ parsed:', value);
         
         if (i === 0) rates['United States'].CLASICA = value;
         else if (i === 1) rates['United States'].MLC = value;
@@ -97,11 +104,13 @@ export function getExchangeRate(
 ): number {
   let normalizedCountry = country;
   
-  if (country.includes('Europe') || country === 'España' || country === 'Spain') {
+  const normalizedInput = country.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  if (normalizedInput.includes('europe') || normalizedInput.includes('europa') || normalizedInput.includes('espana') || normalizedInput.includes('spain')) {
     normalizedCountry = 'Europa';
-  } else if (country === 'Estados Unidos' || country === 'USA') {
+  } else if (normalizedInput.includes('estados unidos') || normalizedInput.includes('united states') || normalizedInput.includes('usa')) {
     normalizedCountry = 'United States';
-  } else if (country === 'México') {
+  } else if (normalizedInput.includes('mexico')) {
     normalizedCountry = 'Mexico';
   }
   
@@ -112,6 +121,7 @@ export function getExchangeRate(
     return rates['Europa'][cardCurrency];
   }
   
+  console.log(`[ExchangeRates] Country: ${country} → ${normalizedCountry}, Currency: ${cardCurrency}, Rate: ${countryRates[cardCurrency]}`);
   return countryRates[cardCurrency];
 }
 

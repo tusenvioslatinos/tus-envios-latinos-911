@@ -43,10 +43,20 @@ export default function RemittanceCashScreen() {
   const exchangeRate = exchangeRates && userCountry
     ? getExchangeRate(userCountry, receiveCurrency, exchangeRates)
     : 0;
+  
+  console.log('[RemittanceCash] amountToReceive:', amountToReceive);
+  console.log('[RemittanceCash] exchangeRate:', exchangeRate);
+  console.log('[RemittanceCash] userCountry:', userCountry);
+  console.log('[RemittanceCash] receiveCurrency:', receiveCurrency);
+  
   const totalToSend = amountToReceive && exchangeRate
     ? amountToReceive * exchangeRate
     : 0;
   const totalAmount = totalToSend + deliveryCost;
+  
+  console.log('[RemittanceCash] totalToSend:', totalToSend);
+  console.log('[RemittanceCash] deliveryCost:', deliveryCost);
+  console.log('[RemittanceCash] totalAmount:', totalAmount);
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
 
@@ -199,7 +209,7 @@ export default function RemittanceCashScreen() {
               </View>
               {exchangeRate > 0 && (
                 <Text style={styles.exchangeRateText}>
-                  Tasa: 1 {currency} = {exchangeRate.toFixed(2)} {receiveCurrency}
+                  Tasa: 1 {receiveCurrency} = {exchangeRate.toFixed(4)} {currency}
                 </Text>
               )}
             </>

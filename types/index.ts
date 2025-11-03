@@ -18,6 +18,7 @@ export interface Recipient {
     CLASICA?: CardInfo;
     MLC?: CardInfo;
     CUP?: CardInfo;
+    USD?: CardInfo;
   };
   province?: string;
   municipality?: string;

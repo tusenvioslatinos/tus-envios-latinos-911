@@ -99,7 +99,7 @@ export default function RemittanceCashScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Moneda a recibir</Text>
           <View style={styles.currencyButtons}>
-            {(['USD', 'MLC', 'CUP'] as CardCurrency[]).map((curr) => (
+            {(['USD', 'CUP'] as CardCurrency[]).map((curr) => (
               <Button
                 key={curr}
                 title={curr}

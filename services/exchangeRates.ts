@@ -34,20 +34,25 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
       'Europa': { USD: 0, MLC: 0, CUP: 0 },
     };
 
-    for (let i = 1; i < lines.length && i <= 9; i++) {
+    console.log('[ExchangeRates] Total lines:', lines.length);
+    
+    for (let i = 0; i < lines.length && i < 9; i++) {
       const columns = lines[i].split(',');
+      console.log(`[ExchangeRates] Line ${i}:`, columns);
+      
       if (columns.length > 2) {
         const value = parseFloat(columns[2].trim()) || 0;
+        console.log(`[ExchangeRates] Line ${i} value in column C:`, value);
         
-        if (i === 1) rates['United States'].USD = value;
-        else if (i === 2) rates['United States'].MLC = value;
-        else if (i === 3) rates['United States'].CUP = value;
-        else if (i === 4) rates['Mexico'].USD = value;
-        else if (i === 5) rates['Mexico'].MLC = value;
-        else if (i === 6) rates['Mexico'].CUP = value;
-        else if (i === 7) rates['Europa'].USD = value;
-        else if (i === 8) rates['Europa'].MLC = value;
-        else if (i === 9) rates['Europa'].CUP = value;
+        if (i === 0) rates['United States'].USD = value;
+        else if (i === 1) rates['United States'].MLC = value;
+        else if (i === 2) rates['United States'].CUP = value;
+        else if (i === 3) rates['Mexico'].USD = value;
+        else if (i === 4) rates['Mexico'].MLC = value;
+        else if (i === 5) rates['Mexico'].CUP = value;
+        else if (i === 6) rates['Europa'].USD = value;
+        else if (i === 7) rates['Europa'].MLC = value;
+        else if (i === 8) rates['Europa'].CUP = value;
       }
     }
     

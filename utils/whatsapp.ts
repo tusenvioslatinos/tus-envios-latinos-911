@@ -159,3 +159,18 @@ function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): 
   
   return '';
 }
+
+export async function openSupportWhatsApp() {
+  const message = 'Necesito soporte para usar la aplicacion';
+  const url = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
+  
+  const canOpen = await Linking.canOpenURL(url);
+  if (canOpen) {
+    await Linking.openURL(url);
+    return true;
+  } else {
+    const webUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    await Linking.openURL(webUrl);
+    return true;
+  }
+}

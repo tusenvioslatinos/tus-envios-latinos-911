@@ -4,6 +4,7 @@ import { DollarSign, ShoppingBag, Smartphone, ArrowRight } from 'lucide-react-na
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
+import { openSupportWhatsApp } from '@/utils/whatsapp';
 
 import * as Haptics from 'expo-haptics';
 import React from "react";
@@ -124,10 +125,11 @@ export default function HomeScreen() {
           </Text>
           <Pressable
             style={styles.infoButton}
-            onPress={() => {
+            onPress={async () => {
               if (Platform.OS !== 'web') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               }
+              await openSupportWhatsApp();
             }}
           >
             <Text style={styles.infoButtonText}>Contactar Soporte</Text>

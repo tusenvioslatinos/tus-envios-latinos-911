@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, Pressable, Platform, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Plus, User, Phone, MapPin, Trash2 } from 'lucide-react-native';
+import { Plus, User, Phone, MapPin, Trash2, CreditCard } from 'lucide-react-native';
 import { useState } from 'react';
 import { useApp, useFilteredRecipients } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
@@ -27,37 +27,50 @@ export default function RecipientsScreen() {
     router.push('/add-recipient' as any);
   };
 
-  const renderRecipient = ({ item }: { item: Recipient }) => (
-    <View style={styles.recipientCard}>
-      <View style={styles.recipientInfo}>
-        <View style={styles.avatarContainer}>
-          <User color={Colors.primary} size={24} />
-        </View>
-        <View style={styles.recipientDetails}>
-          <Text style={styles.recipientName}>{item.name}</Text>
-          <View style={styles.detailRow}>
-            <Phone color={Colors.textSecondary} size={14} />
-            <Text style={styles.detailText}>{item.phone}</Text>
+  const renderRecipient = ({ item }: { item: Recipient }) => {
+    const cardTypes: string[] = [];
+    if (item.cards?.CLASICA) cardTypes.push('CLASICA');
+    if (item.cards?.MLC) cardTypes.push('MLC');
+    if (item.cards?.CUP) cardTypes.push('CUP');
+
+    return (
+      <View style={styles.recipientCard}>
+        <View style={styles.recipientInfo}>
+          <View style={styles.avatarContainer}>
+            <User color={Colors.primary} size={24} />
           </View>
-          {item.province && (
+          <View style={styles.recipientDetails}>
+            <Text style={styles.recipientName}>{item.name}</Text>
             <View style={styles.detailRow}>
-              <MapPin color={Colors.textSecondary} size={14} />
-              <Text style={styles.detailText}>{item.province}</Text>
+              <Phone color={Colors.textSecondary} size={14} />
+              <Text style={styles.detailText}>{item.phone}</Text>
             </View>
-          )}
+            {item.province && (
+              <View style={styles.detailRow}>
+                <MapPin color={Colors.textSecondary} size={14} />
+                <Text style={styles.detailText}>{item.province}</Text>
+              </View>
+            )}
+            {cardTypes.length > 0 && (
+              <View style={styles.detailRow}>
+                <CreditCard color={Colors.textSecondary} size={14} />
+                <Text style={styles.detailText}>{cardTypes.join(', ')}</Text>
+              </View>
+            )}
+          </View>
         </View>
+        <Pressable
+          onPress={() => handleDelete(item.id)}
+          style={({ pressed }) => [
+            styles.deleteButton,
+            pressed && styles.deleteButtonPressed,
+          ]}
+        >
+          <Trash2 color={Colors.error} size={20} />
+        </Pressable>
       </View>
-      <Pressable
-        onPress={() => handleDelete(item.id)}
-        style={({ pressed }) => [
-          styles.deleteButton,
-          pressed && styles.deleteButtonPressed,
-        ]}
-      >
-        <Trash2 color={Colors.error} size={20} />
-      </Pressable>
-    </View>
-  );
+    );
+  };
 
   return (
     <>

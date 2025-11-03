@@ -54,12 +54,8 @@ export default function RemittanceCardScreen() {
       Alert.alert('Error', 'Selecciona un destinatario');
       return false;
     }
-    if (!recipient.cardNumber) {
-      Alert.alert('Error', 'El destinatario debe tener número de tarjeta');
-      return false;
-    }
-    if (!recipient.cardCurrency) {
-      Alert.alert('Error', 'El destinatario debe tener moneda de tarjeta seleccionada');
+    if (!recipient.cards || !recipient.cards[selectedCurrency]) {
+      Alert.alert('Error', `El destinatario debe tener una tarjeta de tipo ${selectedCurrency}`);
       return false;
     }
     if (!amount || parseFloat(amount) <= 0) {
@@ -118,23 +114,6 @@ export default function RemittanceCardScreen() {
           </Text>
         </View>
 
-        <RecipientSelector
-          label="Destinatario"
-          value={recipient}
-          onChange={setRecipient}
-        />
-
-        {recipient?.cardNumber && (
-          <View style={styles.cardInfo}>
-            <View style={styles.cardRow}>
-              <View>
-                <Text style={styles.cardLabel}>Tarjeta:</Text>
-                <Text style={styles.cardNumber}>{recipient.cardNumber}</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
         <View style={styles.currencySelector}>
           <Text style={styles.currencySelectorLabel}>Moneda a recibir:</Text>
           <View style={styles.currencyButtons}>
@@ -145,7 +124,10 @@ export default function RemittanceCardScreen() {
                   styles.currencyButton,
                   selectedCurrency === curr && styles.currencyButtonActive
                 ]}
-                onPress={() => setSelectedCurrency(curr)}
+                onPress={() => {
+                  setSelectedCurrency(curr);
+                  setRecipient(null);
+                }}
               >
                 <Text
                   style={[
@@ -159,6 +141,27 @@ export default function RemittanceCardScreen() {
             ))}
           </View>
         </View>
+
+        <RecipientSelector
+          label="Destinatario"
+          value={recipient}
+          onChange={setRecipient}
+          cardCurrency={selectedCurrency}
+        />
+
+        {recipient?.cards?.[selectedCurrency] && (
+          <View style={styles.cardInfo}>
+            <View style={styles.cardRow}>
+              <View>
+                <Text style={styles.cardLabel}>Tarjeta {selectedCurrency}:</Text>
+                <Text style={styles.cardNumber}>{recipient.cards[selectedCurrency].number}</Text>
+                {recipient.cards[selectedCurrency].type && (
+                  <Text style={styles.cardType}>{recipient.cards[selectedCurrency].type}</Text>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
 
         <FormInput
           label="Monto a recibir"
@@ -292,6 +295,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600' as const,
     color: Colors.text,
+  },
+  cardType: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 4,
   },
   currencyBadge: {
     backgroundColor: '#7C3AED',

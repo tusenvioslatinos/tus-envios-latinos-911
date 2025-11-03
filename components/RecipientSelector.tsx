@@ -1,7 +1,7 @@
 import { View, Text, Pressable, StyleSheet, FlatList, Modal } from 'react-native';
-import { User, Plus } from 'lucide-react-native';
-import { useState } from 'react';
-import { Recipient } from '@/types';
+import { User, Plus, CreditCard } from 'lucide-react-native';
+import { useState, useMemo } from 'react';
+import { Recipient, CardCurrency } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { useRouter } from 'expo-router';
@@ -10,12 +10,18 @@ interface RecipientSelectorProps {
   value: Recipient | null;
   onChange: (recipient: Recipient) => void;
   label: string;
+  cardCurrency?: CardCurrency;
 }
 
-export default function RecipientSelector({ value, onChange, label }: RecipientSelectorProps) {
+export default function RecipientSelector({ value, onChange, label, cardCurrency }: RecipientSelectorProps) {
   const router = useRouter();
   const { recipients } = useApp();
   const [showModal, setShowModal] = useState(false);
+
+  const filteredRecipients = useMemo(() => {
+    if (!cardCurrency) return recipients;
+    return recipients.filter(r => r.cards && r.cards[cardCurrency]);
+  }, [recipients, cardCurrency]);
 
   const handleSelect = (recipient: Recipient) => {
     onChange(recipient);
@@ -69,26 +75,35 @@ export default function RecipientSelector({ value, onChange, label }: RecipientS
           </View>
 
           <FlatList
-            data={recipients}
+            data={filteredRecipients}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => handleSelect(item)}
-                style={({ pressed }) => [
-                  styles.recipientItem,
-                  pressed && styles.recipientItemPressed,
-                ]}
-              >
-                <View style={styles.avatar}>
-                  <User color={Colors.primary} size={20} />
-                </View>
-                <View style={styles.recipientInfo}>
-                  <Text style={styles.recipientName}>{item.name}</Text>
-                  <Text style={styles.recipientPhone}>{item.phone}</Text>
-                </View>
-              </Pressable>
-            )}
+            renderItem={({ item }) => {
+              const cardInfo = cardCurrency && item.cards ? item.cards[cardCurrency] : null;
+              return (
+                <Pressable
+                  onPress={() => handleSelect(item)}
+                  style={({ pressed }) => [
+                    styles.recipientItem,
+                    pressed && styles.recipientItemPressed,
+                  ]}
+                >
+                  <View style={styles.avatar}>
+                    <User color={Colors.primary} size={20} />
+                  </View>
+                  <View style={styles.recipientInfo}>
+                    <Text style={styles.recipientName}>{item.name}</Text>
+                    <Text style={styles.recipientPhone}>{item.phone}</Text>
+                    {cardInfo && (
+                      <View style={styles.cardBadge}>
+                        <CreditCard color={Colors.textLight} size={12} />
+                        <Text style={styles.cardBadgeText}>{cardInfo.number}</Text>
+                      </View>
+                    )}
+                  </View>
+                </Pressable>
+              );
+            }}
             ListFooterComponent={
               <Pressable
                 onPress={handleAddNew}
@@ -213,6 +228,16 @@ const styles = StyleSheet.create({
   recipientPhone: {
     fontSize: 14,
     color: Colors.textSecondary,
+  },
+  cardBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  cardBadgeText: {
+    fontSize: 12,
+    color: Colors.textLight,
   },
   addButton: {
     flexDirection: 'row',

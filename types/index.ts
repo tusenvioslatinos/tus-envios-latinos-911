@@ -4,14 +4,21 @@ export type CardCurrency = 'CLASICA' | 'MLC' | 'CUP';
 
 export type ServiceType = 'remittance-cash' | 'remittance-card' | 'food-combo' | 'mobile-recharge';
 
+export interface CardInfo {
+  number: string;
+  type?: string;
+}
+
 export interface Recipient {
   id: string;
   name: string;
   phone: string;
   address?: string;
-  cardNumber?: string;
-  cardType?: string;
-  cardCurrency?: CardCurrency;
+  cards?: {
+    CLASICA?: CardInfo;
+    MLC?: CardInfo;
+    CUP?: CardInfo;
+  };
   province?: string;
   municipality?: string;
   createdAt: string;

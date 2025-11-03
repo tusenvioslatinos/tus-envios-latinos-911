@@ -5,7 +5,7 @@ import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
-import { CardCurrency } from '@/types';
+
 import { useQuery } from '@tanstack/react-query';
 import { fetchLocations } from '@/services/locations';
 import { ChevronRight } from 'lucide-react-native';
@@ -28,9 +28,12 @@ export default function AddRecipientScreen() {
     address: '',
     province: '',
     municipality: '',
-    cardNumber: '',
-    cardType: '',
-    cardCurrency: undefined as CardCurrency | undefined,
+    clasicaNumber: '',
+    clasicaType: '',
+    mlcNumber: '',
+    mlcType: '',
+    cupNumber: '',
+    cupType: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -57,15 +60,36 @@ export default function AddRecipientScreen() {
     
     setLoading(true);
     try {
+      const cards: any = {};
+      
+      if (formData.clasicaNumber.trim()) {
+        cards.CLASICA = {
+          number: formData.clasicaNumber.trim(),
+          type: formData.clasicaType.trim() || undefined,
+        };
+      }
+      
+      if (formData.mlcNumber.trim()) {
+        cards.MLC = {
+          number: formData.mlcNumber.trim(),
+          type: formData.mlcType.trim() || undefined,
+        };
+      }
+      
+      if (formData.cupNumber.trim()) {
+        cards.CUP = {
+          number: formData.cupNumber.trim(),
+          type: formData.cupType.trim() || undefined,
+        };
+      }
+      
       await addRecipient({
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         address: formData.address.trim() || undefined,
         province: formData.province.trim() || undefined,
         municipality: formData.municipality.trim() || undefined,
-        cardNumber: formData.cardNumber.trim() || undefined,
-        cardType: formData.cardType.trim() || undefined,
-        cardCurrency: formData.cardCurrency,
+        cards: Object.keys(cards).length > 0 ? cards : undefined,
       });
       
       Alert.alert('Éxito', 'Destinatario agregado correctamente');
@@ -196,34 +220,60 @@ export default function AddRecipientScreen() {
           )}
         </View>
 
-        <FormInput
-          label="Número de Tarjeta (opcional)"
-          placeholder="9225 XXXX XXXX XXXX"
-          value={formData.cardNumber}
-          onChangeText={(text) => setFormData(prev => ({ ...prev, cardNumber: text }))}
-          keyboardType="numeric"
-        />
-
-        <FormInput
-          label="Tipo de Tarjeta (opcional)"
-          placeholder="Débito, Crédito, etc."
-          value={formData.cardType}
-          onChangeText={(text) => setFormData(prev => ({ ...prev, cardType: text }))}
-        />
-
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Moneda de la Tarjeta</Text>
-          <Text style={styles.sectionSubtitle}>Selecciona la moneda de la tarjeta del destinatario</Text>
-          <View style={styles.currencyButtons}>
-            {(['CLASICA', 'MLC', 'CUP'] as CardCurrency[]).map((curr) => (
-              <Button
-                key={curr}
-                title={curr}
-                onPress={() => setFormData(prev => ({ ...prev, cardCurrency: curr }))}
-                variant={formData.cardCurrency === curr ? 'primary' : 'secondary'}
-              />
-            ))}
-          </View>
+          <Text style={styles.sectionTitle}>Tarjetas del Destinatario</Text>
+          <Text style={styles.sectionSubtitle}>Puedes agregar hasta 3 tipos de tarjetas (CLASICA, MLC, CUP)</Text>
+        </View>
+
+        <View style={styles.cardSection}>
+          <Text style={styles.cardSectionTitle}>Tarjeta CLASICA (USD)</Text>
+          <FormInput
+            label="Número de Tarjeta"
+            placeholder="9225 XXXX XXXX XXXX"
+            value={formData.clasicaNumber}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, clasicaNumber: text }))}
+            keyboardType="numeric"
+          />
+          <FormInput
+            label="Tipo de Tarjeta (opcional)"
+            placeholder="Débito, Crédito, etc."
+            value={formData.clasicaType}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, clasicaType: text }))}
+          />
+        </View>
+
+        <View style={styles.cardSection}>
+          <Text style={styles.cardSectionTitle}>Tarjeta MLC</Text>
+          <FormInput
+            label="Número de Tarjeta"
+            placeholder="9225 XXXX XXXX XXXX"
+            value={formData.mlcNumber}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, mlcNumber: text }))}
+            keyboardType="numeric"
+          />
+          <FormInput
+            label="Tipo de Tarjeta (opcional)"
+            placeholder="Débito, Crédito, etc."
+            value={formData.mlcType}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, mlcType: text }))}
+          />
+        </View>
+
+        <View style={styles.cardSection}>
+          <Text style={styles.cardSectionTitle}>Tarjeta CUP</Text>
+          <FormInput
+            label="Número de Tarjeta"
+            placeholder="9225 XXXX XXXX XXXX"
+            value={formData.cupNumber}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, cupNumber: text }))}
+            keyboardType="numeric"
+          />
+          <FormInput
+            label="Tipo de Tarjeta (opcional)"
+            placeholder="Débito, Crédito, etc."
+            value={formData.cupType}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, cupType: text }))}
+          />
         </View>
 
         <View style={styles.buttons}>
@@ -262,9 +312,19 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 12,
   },
-  currencyButtons: {
-    flexDirection: 'row',
-    gap: 12,
+  cardSection: {
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  cardSectionTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 12,
   },
   selector: {
     backgroundColor: Colors.surface,

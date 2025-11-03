@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, Pressable, Platform, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Plus, User, Phone, MapPin, Trash2, CreditCard } from 'lucide-react-native';
+import { Plus, User, Phone, MapPin, Trash2, CreditCard, Edit } from 'lucide-react-native';
 import { useState } from 'react';
 import { useApp, useFilteredRecipients } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
@@ -25,6 +25,16 @@ export default function RecipientsScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     router.push('/add-recipient' as any);
+  };
+
+  const handleEdit = (recipient: Recipient) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push({
+      pathname: '/edit-recipient',
+      params: { recipientId: recipient.id },
+    } as any);
   };
 
   const renderRecipient = ({ item }: { item: Recipient }) => {
@@ -59,15 +69,26 @@ export default function RecipientsScreen() {
             )}
           </View>
         </View>
-        <Pressable
-          onPress={() => handleDelete(item.id)}
-          style={({ pressed }) => [
-            styles.deleteButton,
-            pressed && styles.deleteButtonPressed,
-          ]}
-        >
-          <Trash2 color={Colors.error} size={20} />
-        </Pressable>
+        <View style={styles.actions}>
+          <Pressable
+            onPress={() => handleEdit(item)}
+            style={({ pressed }) => [
+              styles.actionButton,
+              pressed && styles.actionButtonPressed,
+            ]}
+          >
+            <Edit color={Colors.primary} size={20} />
+          </Pressable>
+          <Pressable
+            onPress={() => handleDelete(item.id)}
+            style={({ pressed }) => [
+              styles.actionButton,
+              pressed && styles.actionButtonPressed,
+            ]}
+          >
+            <Trash2 color={Colors.error} size={20} />
+          </Pressable>
+        </View>
       </View>
     );
   };
@@ -205,10 +226,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
   },
-  deleteButton: {
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
     padding: 8,
   },
-  deleteButtonPressed: {
+  actionButtonPressed: {
     opacity: 0.5,
   },
   emptyContainer: {

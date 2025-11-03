@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, Alert, Platform } from 'react-native';
 import { Stack } from 'expo-router';
-import { Package, Clock } from 'lucide-react-native';
-import { useRecentOrders } from '@/contexts/AppContext';
+import { Package, Clock, Trash2 } from 'lucide-react-native';
+import { useRecentOrders, useApp } from '@/contexts/AppContext';
+import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 import { Order } from '@/types';
@@ -15,6 +16,30 @@ const SERVICE_NAMES: Record<string, string> = {
 
 export default function HistoryScreen() {
   const orders = useRecentOrders(50);
+  const { deleteOrder } = useApp();
+
+  const handleDelete = async (id: string, recipientName: string) => {
+    Alert.alert(
+      'Eliminar Orden',
+      `¿Estás seguro de eliminar la orden de ${recipientName}?`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            if (Platform.OS !== 'web') {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            await deleteOrder(id);
+          },
+        },
+      ]
+    );
+  };
 
   const renderOrder = ({ item }: { item: Order }) => {
     const currencySymbol = CURRENCY_SYMBOLS[item.currency];
@@ -41,6 +66,15 @@ export default function HistoryScreen() {
               {currencySymbol}{item.amount.toFixed(2)}
             </Text>
           </View>
+          <Pressable
+            onPress={() => handleDelete(item.id, item.recipient.name)}
+            style={({ pressed }) => [
+              styles.deleteButton,
+              pressed && styles.deleteButtonPressed,
+            ]}
+          >
+            <Trash2 color={Colors.error} size={18} />
+          </Pressable>
         </View>
         <View style={styles.orderFooter}>
           <View style={styles.dateContainer}>
@@ -154,6 +188,13 @@ const styles = StyleSheet.create({
   },
   orderAmount: {
     alignItems: 'flex-end',
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  deleteButtonPressed: {
+    opacity: 0.5,
   },
   amountText: {
     fontSize: 18,

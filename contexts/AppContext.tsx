@@ -90,6 +90,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await AsyncStorage.setItem(STORAGE_KEYS.RECIPIENTS, JSON.stringify(updated));
   }, [recipients]);
 
+  const deleteOrder = useCallback(async (id: string) => {
+    const updated = orders.filter(o => o.id !== id);
+    setOrders(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+  }, [orders]);
+
   const addOrder = useCallback(async (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
     const newOrder: Order = {
       ...order,
@@ -139,9 +145,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     updateRecipient,
     deleteRecipient,
     addOrder,
+    deleteOrder,
     updateCurrency,
     updateUserCountry,
-  }), [recipients, orders, currency, userCountry, isLoading, addRecipient, updateRecipient, deleteRecipient, addOrder, updateCurrency, updateUserCountry]);
+  }), [recipients, orders, currency, userCountry, isLoading, addRecipient, updateRecipient, deleteRecipient, addOrder, deleteOrder, updateCurrency, updateUserCountry]);
 });
 
 export const useFilteredRecipients = (searchQuery: string) => {

@@ -44,8 +44,14 @@ function parseCSVLine(line: string): string[] {
 
 function parseDecimalValue(value: string): number {
   const cleaned = value.replace(/"/g, '').trim();
-  const normalized = cleaned.replace(',', '.');
-  return parseFloat(normalized) || 0;
+  if (!cleaned || cleaned === '') return 0;
+  
+  const parts = cleaned.split(',');
+  if (parts.length === 2) {
+    return parseFloat(parts[0] + '.' + parts[1]) || 0;
+  }
+  
+  return parseFloat(cleaned) || 0;
 }
 
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
@@ -70,7 +76,20 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
       
       if (columns.length >= 3) {
         const rawValue = columns[2];
-        const value = parseDecimalValue(rawValue);
+        let value = 0;
+        
+        if (rawValue.includes(',')) {
+          const parts = rawValue.split(',');
+          if (parts.length >= 2) {
+            const wholePart = parts[0].replace(/"/g, '').trim();
+            const decimalPart = parts[1].replace(/"/g, '').trim();
+            const fullNumber = wholePart + '.' + decimalPart;
+            value = parseFloat(fullNumber) || 0;
+          }
+        } else {
+          value = parseDecimalValue(rawValue);
+        }
+        
         console.log(`[ExchangeRates] Line ${i} raw value:`, rawValue, '→ parsed:', value);
         
         if (i === 0) rates['United States'].CLASICA = value;

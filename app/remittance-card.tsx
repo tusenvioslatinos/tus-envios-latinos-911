@@ -53,7 +53,7 @@ export default function RemittanceCardScreen() {
     ? getExchangeRate(userCountry, cardCurrency, exchangeRates)
     : 0;
   const totalToSend = amountToReceive && exchangeRate
-    ? amountToReceive / exchangeRate
+    ? amountToReceive * exchangeRate
     : 0;
   const totalAmount = totalToSend + deliveryCost;
 

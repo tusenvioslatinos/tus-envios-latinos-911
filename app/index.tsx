@@ -74,8 +74,7 @@ export default function WelcomeScreen() {
           <Text style={styles.welcomeText}>Bienvenido a</Text>
           <Text style={styles.brandText}>Tus Envíos Latinos</Text>
           <Text style={styles.descriptionText}>
-            Tus Envíos Latinos nació de la necesidad de enviar dinero a la familia cubana, 
-            con más de 6 años en el mercado contamos con un equipo completo a su disposición
+            Con más de 6 años en el mercado, ofreciendo servicios tales como envío de dinero, combos de comida y recargas a Cuba, Tus Envíos Latinos, le brinda excelencia y calidad como nuestros clientes merecen.
           </Text>
         </View>
 

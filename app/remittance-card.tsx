@@ -49,8 +49,11 @@ export default function RemittanceCardScreen() {
     : 0;
 
   const amountToReceive = amount ? parseFloat(amount) : 0;
-  const totalToSend = amountToReceive && exchangeRates && userCountry
-    ? amountToReceive / getExchangeRate(userCountry, cardCurrency, exchangeRates)
+  const exchangeRate = exchangeRates && userCountry
+    ? getExchangeRate(userCountry, cardCurrency, exchangeRates)
+    : 0;
+  const totalToSend = amountToReceive && exchangeRate
+    ? amountToReceive / exchangeRate
     : 0;
   const totalAmount = totalToSend + deliveryCost;
 
@@ -267,12 +270,6 @@ export default function RemittanceCardScreen() {
             </View>
           ) : (
             <>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Monto a recibir:</Text>
-                <Text style={styles.summaryValueReceive}>
-                  {amountToReceive.toFixed(2)} {cardCurrency}
-                </Text>
-              </View>
               {deliveryCost > 0 && (
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Costo de mensajería:</Text>
@@ -281,19 +278,18 @@ export default function RemittanceCardScreen() {
                   </Text>
                 </View>
               )}
-              <View style={styles.dividerSmall} />
+              {deliveryCost > 0 && <View style={styles.dividerSmall} />}
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Total a pagar:</Text>
                 <Text style={styles.summaryValue}>
                   {currencySymbol}{totalAmount.toFixed(2)} {currency}
                 </Text>
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Total a enviar:</Text>
-                <Text style={styles.summaryValueLarge}>
-                  {(amountToReceive + (deliveryCost * (exchangeRates && userCountry ? getExchangeRate(userCountry, cardCurrency, exchangeRates) : 1))).toFixed(2)} {cardCurrency}
+              {exchangeRate > 0 && (
+                <Text style={styles.exchangeRateText}>
+                  Tasa: 1 {currency} = {exchangeRate.toFixed(2)} {cardCurrency}
                 </Text>
-              </View>
+              )}
             </>
           )}
         </View>
@@ -466,6 +462,12 @@ const styles = StyleSheet.create({
   rateLoadingText: {
     fontSize: 14,
     color: Colors.textSecondary,
+  },
+  exchangeRateText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
   },
   currencySelector: {
     marginBottom: 20,

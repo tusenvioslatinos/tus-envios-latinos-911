@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.tus-envios-latinos-wg0vvb5"
+      "bundleIdentifier": "com.tusenvioslatinos"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.tus_envios_latinos_wg0vvb5",
+      "package": "com.tusenvioslatinos",
       "permissions": [
         "android.permission.VIBRATE"
       ]

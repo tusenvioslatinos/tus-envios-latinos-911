@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet, FlatList, Modal } from 'react-native';
-import { User, Plus, CreditCard } from 'lucide-react-native';
-import { useState, useMemo } from 'react';
+import { User, Plus, CreditCard, AlertTriangle } from 'lucide-react-native';
+import { useState } from 'react';
 import { Recipient, CardCurrency } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
@@ -11,21 +11,38 @@ interface RecipientSelectorProps {
   onChange: (recipient: Recipient) => void;
   label: string;
   cardCurrency?: CardCurrency;
+  onAddCardRequest?: (recipient: Recipient, cardType: CardCurrency) => void;
 }
 
-export default function RecipientSelector({ value, onChange, label, cardCurrency }: RecipientSelectorProps) {
+export default function RecipientSelector({ value, onChange, label, cardCurrency, onAddCardRequest }: RecipientSelectorProps) {
   const router = useRouter();
   const { recipients } = useApp();
   const [showModal, setShowModal] = useState(false);
-
-  const filteredRecipients = useMemo(() => {
-    if (!cardCurrency) return recipients;
-    return recipients.filter(r => r.cards && r.cards[cardCurrency]);
-  }, [recipients, cardCurrency]);
+  const [showMissingCardModal, setShowMissingCardModal] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
 
   const handleSelect = (recipient: Recipient) => {
+    if (cardCurrency && (!recipient.cards || !recipient.cards[cardCurrency])) {
+      setSelectedRecipient(recipient);
+      setShowModal(false);
+      setShowMissingCardModal(true);
+      return;
+    }
     onChange(recipient);
     setShowModal(false);
+  };
+
+  const handleAddCard = () => {
+    setShowMissingCardModal(false);
+    if (selectedRecipient && cardCurrency && onAddCardRequest) {
+      onAddCardRequest(selectedRecipient, cardCurrency);
+    }
+  };
+
+  const handleCancelAddCard = () => {
+    setShowMissingCardModal(false);
+    setSelectedRecipient(null);
+    setShowModal(true);
   };
 
   const handleAddNew = () => {
@@ -75,17 +92,19 @@ export default function RecipientSelector({ value, onChange, label, cardCurrency
           </View>
 
           <FlatList
-            data={filteredRecipients}
+            data={recipients}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
             renderItem={({ item }) => {
-              const cardInfo = cardCurrency && item.cards ? item.cards[cardCurrency] : null;
+              const hasCard = cardCurrency && item.cards && item.cards[cardCurrency];
+              const cardInfo = hasCard && item.cards ? item.cards[cardCurrency] : null;
               return (
                 <Pressable
                   onPress={() => handleSelect(item)}
                   style={({ pressed }) => [
                     styles.recipientItem,
                     pressed && styles.recipientItemPressed,
+                    !hasCard && cardCurrency && styles.recipientItemNoCard,
                   ]}
                 >
                   <View style={styles.avatar}>
@@ -98,6 +117,12 @@ export default function RecipientSelector({ value, onChange, label, cardCurrency
                       <View style={styles.cardBadge}>
                         <CreditCard color={Colors.textLight} size={12} />
                         <Text style={styles.cardBadgeText}>{cardInfo.number}</Text>
+                      </View>
+                    )}
+                    {!hasCard && cardCurrency && (
+                      <View style={styles.warningBadge}>
+                        <AlertTriangle color="#F59E0B" size={12} />
+                        <Text style={styles.warningBadgeText}>Sin tarjeta {cardCurrency}</Text>
                       </View>
                     )}
                   </View>
@@ -117,6 +142,49 @@ export default function RecipientSelector({ value, onChange, label, cardCurrency
               </Pressable>
             }
           />
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showMissingCardModal}
+        animationType="fade"
+        transparent
+        onRequestClose={handleCancelAddCard}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.alertCard}>
+            <View style={styles.alertIcon}>
+              <AlertTriangle color="#F59E0B" size={48} />
+            </View>
+            <Text style={styles.alertTitle}>Tarjeta no disponible</Text>
+            <Text style={styles.alertMessage}>
+              El destinatario <Text style={styles.alertRecipientName}>{selectedRecipient?.name}</Text> no tiene guardada una tarjeta de tipo <Text style={styles.alertCurrency}>{cardCurrency}</Text>.
+            </Text>
+            <Text style={styles.alertQuestion}>¿Deseas agregarle esta tarjeta ahora?</Text>
+            
+            <View style={styles.alertButtons}>
+              <Pressable
+                onPress={handleCancelAddCard}
+                style={({ pressed }) => [
+                  styles.alertButton,
+                  styles.alertButtonSecondary,
+                  pressed && styles.alertButtonPressed,
+                ]}
+              >
+                <Text style={styles.alertButtonTextSecondary}>Cancelar</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleAddCard}
+                style={({ pressed }) => [
+                  styles.alertButton,
+                  styles.alertButtonPrimary,
+                  pressed && styles.alertButtonPressed,
+                ]}
+              >
+                <Text style={styles.alertButtonTextPrimary}>Agregar Tarjeta</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       </Modal>
     </>
@@ -259,5 +327,101 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.primary,
+  },
+  recipientItemNoCard: {
+    opacity: 0.7,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    borderStyle: 'dashed',
+  },
+  warningBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  warningBadgeText: {
+    fontSize: 12,
+    color: '#F59E0B',
+    fontWeight: '500' as const,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  alertCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  alertIcon: {
+    marginBottom: 16,
+  },
+  alertTitle: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: Colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  alertMessage: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 8,
+  },
+  alertRecipientName: {
+    fontWeight: 'bold' as const,
+    color: Colors.text,
+  },
+  alertCurrency: {
+    fontWeight: 'bold' as const,
+    color: Colors.primary,
+  },
+  alertQuestion: {
+    fontSize: 16,
+    color: Colors.text,
+    textAlign: 'center',
+    marginBottom: 24,
+    fontWeight: '600' as const,
+  },
+  alertButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  alertButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertButtonPrimary: {
+    backgroundColor: Colors.primary,
+  },
+  alertButtonSecondary: {
+    backgroundColor: Colors.border,
+  },
+  alertButtonPressed: {
+    opacity: 0.7,
+  },
+  alertButtonTextPrimary: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  alertButtonTextSecondary: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
   },
 });

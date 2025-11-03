@@ -1,12 +1,13 @@
-import { View, StyleSheet, ScrollView, Alert, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, ActivityIndicator, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
+import { X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
 import RecipientSelector from '@/components/RecipientSelector';
-import { Recipient } from '@/types';
+import { Recipient, CardCurrency } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 import { useQuery } from '@tanstack/react-query';
@@ -15,7 +16,7 @@ import { fetchLocations, getDeliveryCost } from '@/services/locations';
 
 export default function RemittanceCardScreen() {
   const router = useRouter();
-  const { currency, userCountry, addOrder } = useApp();
+  const { currency, userCountry, addOrder, updateRecipient } = useApp();
   const [loading, setLoading] = useState(false);
   
   const [recipient, setRecipient] = useState<Recipient | null>(null);
@@ -24,6 +25,10 @@ export default function RemittanceCardScreen() {
   const [senderPhone, setSenderPhone] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState<'CLASICA' | 'MLC' | 'CUP'>('MLC');
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [pendingRecipient, setPendingRecipient] = useState<Recipient | null>(null);
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardType, setCardType] = useState('');
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
 
@@ -48,6 +53,56 @@ export default function RemittanceCardScreen() {
     ? amountToReceive / getExchangeRate(userCountry, cardCurrency, exchangeRates)
     : 0;
   const totalAmount = totalToSend + deliveryCost;
+
+  const handleAddCardToRecipient = (recipientToUpdate: Recipient, cardCurrency: CardCurrency) => {
+    console.log('[RemittanceCard] Request to add card:', cardCurrency, 'to recipient:', recipientToUpdate.name);
+    setPendingRecipient(recipientToUpdate);
+    setShowAddCardModal(true);
+  };
+
+  const handleSaveCard = async () => {
+    if (!pendingRecipient) return;
+    
+    if (!cardNumber.trim()) {
+      Alert.alert('Error', 'Ingresa el número de tarjeta');
+      return;
+    }
+
+    try {
+      const updatedCards = {
+        ...pendingRecipient.cards,
+        [selectedCurrency]: {
+          number: cardNumber.trim(),
+          type: cardType.trim() || undefined,
+        },
+      };
+
+      await updateRecipient(pendingRecipient.id, { cards: updatedCards });
+      
+      const updatedRecipient = {
+        ...pendingRecipient,
+        cards: updatedCards,
+      };
+      
+      setRecipient(updatedRecipient);
+      setShowAddCardModal(false);
+      setPendingRecipient(null);
+      setCardNumber('');
+      setCardType('');
+      
+      Alert.alert('Éxito', `Tarjeta ${selectedCurrency} agregada correctamente`);
+    } catch (error) {
+      console.error('[RemittanceCard] Error saving card:', error);
+      Alert.alert('Error', 'No se pudo agregar la tarjeta. Intenta nuevamente.');
+    }
+  };
+
+  const handleCloseAddCardModal = () => {
+    setShowAddCardModal(false);
+    setPendingRecipient(null);
+    setCardNumber('');
+    setCardType('');
+  };
 
   const validate = () => {
     if (!recipient) {
@@ -147,6 +202,7 @@ export default function RemittanceCardScreen() {
           value={recipient}
           onChange={setRecipient}
           cardCurrency={selectedCurrency}
+          onAddCardRequest={handleAddCardToRecipient}
         />
 
         {recipient?.cards?.[selectedCurrency] && (
@@ -245,6 +301,52 @@ export default function RemittanceCardScreen() {
           loading={loading}
         />
       </ScrollView>
+
+      <Modal
+        visible={showAddCardModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={handleCloseAddCardModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Agregar Tarjeta {selectedCurrency}</Text>
+            <Pressable onPress={handleCloseAddCardModal} style={styles.modalCloseButton}>
+              <X color={Colors.text} size={24} />
+            </Pressable>
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.recipientInfo}>
+              <Text style={styles.recipientInfoLabel}>Destinatario:</Text>
+              <Text style={styles.recipientInfoValue}>{pendingRecipient?.name}</Text>
+            </View>
+
+            <FormInput
+              label={`Número de Tarjeta ${selectedCurrency}`}
+              placeholder="9225 XXXX XXXX XXXX"
+              value={cardNumber}
+              onChangeText={setCardNumber}
+              keyboardType="numeric"
+              required
+            />
+
+            <FormInput
+              label="Tipo de Tarjeta (opcional)"
+              placeholder="Débito, Crédito, etc."
+              value={cardType}
+              onChangeText={setCardType}
+            />
+
+            <View style={styles.modalButtons}>
+              <Button
+                title="Guardar Tarjeta"
+                onPress={handleSaveCard}
+              />
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -396,5 +498,49 @@ const styles = StyleSheet.create({
   },
   currencyButtonTextActive: {
     color: '#FFFFFF',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: Colors.text,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  recipientInfo: {
+    backgroundColor: Colors.primaryLight + '15',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  recipientInfoLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  recipientInfoValue: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: Colors.text,
+  },
+  modalButtons: {
+    marginTop: 20,
   },
 });

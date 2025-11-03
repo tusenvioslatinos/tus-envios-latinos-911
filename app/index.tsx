@@ -47,7 +47,7 @@ export default function WelcomeScreen() {
       >
         <View style={styles.loadingContainer}>
           <Image 
-            source={{ uri: 'https://rork.app/pa/34z6c325dcpuojgjmfr7a/logo' }}
+            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/fo6sw75khnc0or9c68284' }}
             style={styles.logoLarge}
             resizeMode="contain"
           />
@@ -64,7 +64,7 @@ export default function WelcomeScreen() {
       <View style={[styles.content, { paddingTop: insets.top, paddingBottom: 48 + insets.bottom }]}>
         <View style={styles.logoContainer}>
           <Image 
-            source={{ uri: 'https://rork.app/pa/34z6c325dcpuojgjmfr7a/logo' }}
+            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/fo6sw75khnc0or9c68284' }}
             style={styles.logo}
             resizeMode="contain"
           />

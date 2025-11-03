@@ -105,17 +105,19 @@ export function getDeliveryCost(
   
   let normalizedCountry: keyof Location['deliveryCost'];
   
-  if (country.includes('Europe') || country === 'España' || country === 'Spain' || country === 'Europa') {
+  const countryLower = country.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  if (countryLower.includes('europe') || countryLower.includes('espana') || countryLower.includes('spain') || countryLower.includes('europa')) {
     normalizedCountry = 'Europa';
-  } else if (country === 'Estados Unidos' || country === 'United States' || country === 'USA') {
+  } else if (countryLower.includes('estados unidos') || countryLower.includes('united states') || countryLower.includes('usa')) {
     normalizedCountry = 'United States';
-  } else if (country === 'México' || country === 'Mexico') {
+  } else if (countryLower.includes('mexico')) {
     normalizedCountry = 'Mexico';
   } else {
     normalizedCountry = country as keyof Location['deliveryCost'];
   }
   
-  console.log('[Locations] Normalized country:', normalizedCountry);
+  console.log('[Locations] Normalized country:', country, '→', normalizedCountry);
   
   const cost = location.deliveryCost[normalizedCountry] || 0;
   console.log('[Locations] Delivery cost:', cost);

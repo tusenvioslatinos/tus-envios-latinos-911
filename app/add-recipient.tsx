@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, Pressable, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
@@ -6,11 +6,21 @@ import Colors from '@/constants/colors';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
 import { CardCurrency } from '@/types';
+import { useQuery } from '@tanstack/react-query';
+import { fetchLocations } from '@/services/locations';
+import { ChevronRight } from 'lucide-react-native';
 
 export default function AddRecipientScreen() {
   const router = useRouter();
   const { addRecipient } = useApp();
   const [loading, setLoading] = useState(false);
+  const [showProvinces, setShowProvinces] = useState(false);
+  const [showMunicipalities, setShowMunicipalities] = useState(false);
+
+  const { data: locationData, isLoading: locationsLoading } = useQuery({
+    queryKey: ['locations'],
+    queryFn: fetchLocations,
+  });
   
   const [formData, setFormData] = useState({
     name: '',
@@ -60,7 +70,7 @@ export default function AddRecipientScreen() {
       
       Alert.alert('Éxito', 'Destinatario agregado correctamente');
       router.back();
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'No se pudo agregar el destinatario');
     } finally {
       setLoading(false);
@@ -99,19 +109,92 @@ export default function AddRecipientScreen() {
           numberOfLines={2}
         />
 
-        <FormInput
-          label="Provincia (opcional)"
-          placeholder="La Habana"
-          value={formData.province}
-          onChangeText={(text) => setFormData(prev => ({ ...prev, province: text }))}
-        />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ubicación del Destinatario</Text>
+          {locationsLoading ? (
+            <ActivityIndicator size="small" color={Colors.primary} />
+          ) : (
+            <>
+              <Pressable
+                onPress={() => setShowProvinces(!showProvinces)}
+                style={({ pressed }) => [
+                  styles.selector,
+                  pressed && styles.selectorPressed,
+                ]}
+              >
+                <View style={styles.selectorContent}>
+                  <Text style={styles.selectorLabel}>Provincia</Text>
+                  <Text style={styles.selectorValue}>
+                    {formData.province || 'Seleccionar provincia'}
+                  </Text>
+                </View>
+                <ChevronRight color={Colors.textLight} size={20} />
+              </Pressable>
 
-        <FormInput
-          label="Municipio (opcional)"
-          placeholder="Plaza de la Revolución"
-          value={formData.municipality}
-          onChangeText={(text) => setFormData(prev => ({ ...prev, municipality: text }))}
-        />
+              {showProvinces && locationData && (
+                <View style={styles.dropdown}>
+                  {locationData.provinces.map((province) => (
+                    <Pressable
+                      key={province}
+                      onPress={() => {
+                        setFormData(prev => ({ ...prev, province, municipality: '' }));
+                        setShowProvinces(false);
+                      }}
+                      style={({ pressed }) => [
+                        styles.dropdownItem,
+                        formData.province === province && styles.dropdownItemSelected,
+                        pressed && styles.dropdownItemPressed,
+                      ]}
+                    >
+                      <Text style={styles.dropdownText}>{province}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
+              {formData.province && (
+                <>
+                  <Pressable
+                    onPress={() => setShowMunicipalities(!showMunicipalities)}
+                    style={({ pressed }) => [
+                      styles.selector,
+                      pressed && styles.selectorPressed,
+                    ]}
+                  >
+                    <View style={styles.selectorContent}>
+                      <Text style={styles.selectorLabel}>Municipio</Text>
+                      <Text style={styles.selectorValue}>
+                        {formData.municipality || 'Seleccionar municipio'}
+                      </Text>
+                    </View>
+                    <ChevronRight color={Colors.textLight} size={20} />
+                  </Pressable>
+
+                  {showMunicipalities && locationData && locationData.municipalities[formData.province] && (
+                    <View style={styles.dropdown}>
+                      {locationData.municipalities[formData.province].map((municipality) => (
+                        <Pressable
+                          key={municipality}
+                          onPress={() => {
+                            setFormData(prev => ({ ...prev, municipality }));
+                            setShowMunicipalities(false);
+                          }}
+                          style={({ pressed }) => [
+                            styles.dropdownItem,
+                            formData.municipality === municipality && styles.dropdownItemSelected,
+                            pressed && styles.dropdownItemPressed,
+                          ]}
+                        >
+                          <Text style={styles.dropdownText}>{municipality}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </View>
 
         <FormInput
           label="Número de Tarjeta (opcional)"
@@ -182,6 +265,56 @@ const styles = StyleSheet.create({
   currencyButtons: {
     flexDirection: 'row',
     gap: 12,
+  },
+  selector: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  selectorPressed: {
+    opacity: 0.7,
+  },
+  selectorContent: {
+    flex: 1,
+  },
+  selectorLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  selectorValue: {
+    fontSize: 16,
+    color: Colors.text,
+    fontWeight: '500' as const,
+  },
+  dropdown: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    marginBottom: 12,
+    maxHeight: 250,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  dropdownItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.primaryLight + '10',
+  },
+  dropdownItemPressed: {
+    opacity: 0.7,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: Colors.text,
   },
   buttons: {
     marginTop: 12,

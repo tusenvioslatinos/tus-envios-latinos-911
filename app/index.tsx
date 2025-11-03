@@ -13,7 +13,7 @@ export default function WelcomeScreen() {
   const [showContent, setShowContent] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const { userCountry } = useApp();
+  const { hasSelectedCountry } = useApp();
 
   useEffect(() => {
     if (!isLoading) {
@@ -25,10 +25,12 @@ export default function WelcomeScreen() {
   }, [isLoading]);
 
   useEffect(() => {
-    if (!isLoading && showContent && !userCountry) {
-      router.replace('/country-selection');
+    if (!isLoading && showContent) {
+      if (!hasSelectedCountry) {
+        router.replace('/country-selection');
+      }
     }
-  }, [isLoading, showContent, userCountry, router]);
+  }, [isLoading, showContent, hasSelectedCountry, router]);
 
   const handleContinue = () => {
     if (Platform.OS !== 'web') {

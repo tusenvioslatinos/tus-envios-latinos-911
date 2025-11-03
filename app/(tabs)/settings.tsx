@@ -3,13 +3,19 @@ import { Stack } from 'expo-router';
 import { Globe, ChevronRight } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
-import { COUNTRIES } from '@/constants/data';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCountries } from '@/services/countries';
 
 export default function SettingsScreen() {
   const { userCountry, updateUserCountry } = useApp();
   const [showCountries, setShowCountries] = useState(false);
+
+  const { data: countries, isLoading: countriesLoading } = useQuery<string[]>({
+    queryKey: ['countries'],
+    queryFn: fetchCountries,
+  });
 
   const handleCountrySelect = async (country: string) => {
     if (Platform.OS !== 'web') {
@@ -47,21 +53,25 @@ export default function SettingsScreen() {
 
           {showCountries && (
             <View style={styles.countriesContainer}>
-              {COUNTRIES.map((country) => (
-                <Pressable
-                  key={country.name}
-                  onPress={() => handleCountrySelect(country.name)}
-                  style={({ pressed }) => [
-                    styles.countryItem,
-                    userCountry === country.name && styles.countryItemSelected,
-                    pressed && styles.countryItemPressed,
-                  ]}
-                >
-                  <Text style={styles.countryFlag}>{country.flag}</Text>
-                  <Text style={styles.countryName}>{country.name}</Text>
-                  <Text style={styles.countryCurrency}>{country.currency}</Text>
-                </Pressable>
-              ))}
+              {countriesLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>Cargando países...</Text>
+                </View>
+              ) : (
+                countries?.map((country) => (
+                  <Pressable
+                    key={country}
+                    onPress={() => handleCountrySelect(country)}
+                    style={({ pressed }) => [
+                      styles.countryItem,
+                      userCountry === country && styles.countryItemSelected,
+                      pressed && styles.countryItemPressed,
+                    ]}
+                  >
+                    <Text style={styles.countryName}>{country}</Text>
+                  </Pressable>
+                ))
+              )}
             </View>
           )}
         </View>
@@ -171,17 +181,17 @@ const styles = StyleSheet.create({
   countryItemPressed: {
     opacity: 0.7,
   },
-  countryFlag: {
-    fontSize: 24,
-  },
   countryName: {
     flex: 1,
     fontSize: 16,
     color: Colors.text,
   },
-  countryCurrency: {
+  loadingContainer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  loadingText: {
     fontSize: 14,
-    fontWeight: '600' as const,
     color: Colors.textSecondary,
   },
   infoCard: {

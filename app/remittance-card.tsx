@@ -10,7 +10,8 @@ import { Recipient } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 import { useQuery } from '@tanstack/react-query';
-import { fetchExchangeRates, calculateAmountToReceive } from '@/services/exchangeRates';
+import { fetchExchangeRates, getExchangeRate } from '@/services/exchangeRates';
+import { fetchLocations, getDeliveryCost } from '@/services/locations';
 
 export default function RemittanceCardScreen() {
   const router = useRouter();
@@ -30,11 +31,22 @@ export default function RemittanceCardScreen() {
     queryFn: fetchExchangeRates,
   });
 
-  const cardCurrency = recipient?.cardCurrency || 'USD';
+  const { data: locationData, isLoading: locationsLoading } = useQuery({
+    queryKey: ['locations'],
+    queryFn: fetchLocations,
+  });
 
-  const amountToReceive = amount && exchangeRates
-    ? calculateAmountToReceive(parseFloat(amount), userCountry, cardCurrency, exchangeRates)
+  const cardCurrency = recipient?.cardCurrency || 'MLC';
+
+  const deliveryCost = recipient && locationData && recipient.province && recipient.municipality
+    ? getDeliveryCost(recipient.province, recipient.municipality, userCountry || '', locationData)
     : 0;
+
+  const amountToReceive = amount ? parseFloat(amount) : 0;
+  const totalToSend = amountToReceive && exchangeRates && userCountry
+    ? amountToReceive / getExchangeRate(userCountry, cardCurrency, exchangeRates)
+    : 0;
+  const totalAmount = totalToSend + deliveryCost;
 
   const validate = () => {
     if (!recipient) {
@@ -77,7 +89,7 @@ export default function RemittanceCardScreen() {
         senderName: senderName.trim(),
         senderPhone: senderPhone.trim(),
         senderEmail: senderEmail.trim() || undefined,
-        senderCountry: userCountry,
+        senderCountry: userCountry || 'United States',
       });
 
       await sendOrderViaWhatsApp(order);
@@ -128,8 +140,8 @@ export default function RemittanceCardScreen() {
         )}
 
         <FormInput
-          label="Monto a enviar"
-          placeholder={`${currencySymbol}100.00`}
+          label="Monto a recibir"
+          placeholder={`100.00 ${cardCurrency}`}
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
@@ -165,24 +177,41 @@ export default function RemittanceCardScreen() {
         />
 
         <View style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total a enviar:</Text>
-            <Text style={styles.summaryValue}>
-              {currencySymbol}{amount || '0.00'} {currency}
-            </Text>
-          </View>
-          {ratesLoading ? (
+          {ratesLoading || locationsLoading ? (
             <View style={styles.rateLoading}>
               <ActivityIndicator size="small" color="#7C3AED" />
               <Text style={styles.rateLoadingText}>Cargando tasas...</Text>
             </View>
           ) : (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Monto a recibir en tarjeta:</Text>
-              <Text style={styles.summaryValueReceive}>
-                {amountToReceive.toFixed(2)} {cardCurrency}
-              </Text>
-            </View>
+            <>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Monto a recibir:</Text>
+                <Text style={styles.summaryValueReceive}>
+                  {amountToReceive.toFixed(2)} {cardCurrency}
+                </Text>
+              </View>
+              {deliveryCost > 0 && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Costo de mensajería:</Text>
+                  <Text style={styles.summaryValue}>
+                    {currencySymbol}{deliveryCost.toFixed(2)} {currency}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.dividerSmall} />
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Total a pagar:</Text>
+                <Text style={styles.summaryValue}>
+                  {currencySymbol}{totalAmount.toFixed(2)} {currency}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Total a enviar:</Text>
+                <Text style={styles.summaryValueLarge}>
+                  {(amountToReceive + (deliveryCost * (exchangeRates && userCountry ? getExchangeRate(userCountry, cardCurrency, exchangeRates) : 1))).toFixed(2)} {cardCurrency}
+                </Text>
+              </View>
+            </>
           )}
         </View>
 
@@ -284,6 +313,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600' as const,
     color: Colors.secondary,
+  },
+  summaryValueLarge: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: Colors.secondary,
+  },
+  dividerSmall: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 8,
   },
   rateLoading: {
     flexDirection: 'row',

@@ -14,7 +14,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [currency, setCurrency] = useState<Currency>('USD');
-  const [userCountry, setUserCountry] = useState<string>('United States');
+  const [userCountry, setUserCountry] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -54,6 +54,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
       if (storedCountry) {
         setUserCountry(storedCountry);
         console.log('[AppContext] Country loaded:', storedCountry);
+      } else {
+        console.log('[AppContext] No country stored, needs selection');
       }
       console.log('[AppContext] Data loaded successfully');
     } catch (error) {
@@ -124,6 +126,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     currency,
     userCountry,
     isLoading,
+    hasSelectedCountry: userCountry !== null,
     addRecipient,
     updateRecipient,
     deleteRecipient,

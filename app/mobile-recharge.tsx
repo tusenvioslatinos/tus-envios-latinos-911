@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Alert, Text, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, Pressable, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Check } from 'lucide-react-native';
@@ -9,7 +9,9 @@ import Button from '@/components/Button';
 import RecipientSelector from '@/components/RecipientSelector';
 import { Recipient } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
-import { CURRENCY_SYMBOLS, RECHARGE_OPTIONS } from '@/constants/data';
+import { CURRENCY_SYMBOLS } from '@/constants/data';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMobileRecharges, getRechargePriceForCurrency } from '@/services/mobileRecharge';
 
 export default function MobileRechargeScreen() {
   const router = useRouter();
@@ -17,61 +19,56 @@ export default function MobileRechargeScreen() {
   const [loading, setLoading] = useState(false);
   
   const [recipient, setRecipient] = useState<Recipient | null>(null);
-  const [selectedAmount, setSelectedAmount] = useState<string | null>(null);
+  const [selectedRecharge, setSelectedRecharge] = useState<string | null>(null);
   const [senderName, setSenderName] = useState('');
-  const [senderPhone, setSenderPhone] = useState('');
-  const [senderEmail, setSenderEmail] = useState('');
+
+  const { data: recharges, isLoading: rechargesLoading } = useQuery({
+    queryKey: ['mobileRecharges'],
+    queryFn: fetchMobileRecharges,
+  });
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
-  const rechargeOption = RECHARGE_OPTIONS.find(r => r.id === selectedAmount);
+  const recharge = recharges?.find(r => r.id === selectedRecharge);
+  const rechargePrice = recharge ? getRechargePriceForCurrency(recharge, currency) : 0;
 
   const validate = () => {
     if (!recipient) {
       Alert.alert('Error', 'Selecciona un destinatario');
       return false;
     }
-    if (!selectedAmount) {
-      Alert.alert('Error', 'Selecciona un monto de recarga');
+    if (!selectedRecharge) {
+      Alert.alert('Error', 'Selecciona una recarga');
       return false;
     }
     if (!senderName.trim()) {
       Alert.alert('Error', 'Ingresa tu nombre');
       return false;
     }
-    if (!senderPhone.trim()) {
-      Alert.alert('Error', 'Ingresa tu teléfono');
-      return false;
-    }
     return true;
   };
 
   const handleSubmit = async () => {
-    if (!validate() || !recipient || !rechargeOption) return;
+    if (!validate() || !recipient || !recharge) return;
     
     setLoading(true);
     try {
       const order = await addOrder({
         type: 'mobile-recharge',
         recipient,
-        amount: rechargeOption.amount,
+        amount: rechargePrice,
         currency,
         senderName: senderName.trim(),
-        senderPhone: senderPhone.trim(),
-        senderEmail: senderEmail.trim() || undefined,
-        senderCountry: userCountry,
+        senderCountry: userCountry || 'United States',
         details: {
-          rechargeAmount: rechargeOption.amount,
-          bonus: rechargeOption.bonus,
+          rechargeName: recharge.name,
+          rechargeDescription: recharge.description,
+          notes: recharge.notes,
         },
       });
 
       await sendOrderViaWhatsApp(order);
       
-      Alert.alert(
-        '¡Orden Enviada!',
-        'Tu orden ha sido enviada por WhatsApp. Recibirás las instrucciones de pago.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      router.back();
     } catch {
       Alert.alert('Error', 'No se pudo enviar la orden. Intenta nuevamente.');
     } finally {
@@ -103,37 +100,52 @@ export default function MobileRechargeScreen() {
           </View>
         )}
 
-        <Text style={styles.sectionLabel}>Selecciona el Monto</Text>
-        <View style={styles.rechargeGrid}>
-          {RECHARGE_OPTIONS.map((option) => (
-            <Pressable
-              key={option.id}
-              onPress={() => setSelectedAmount(option.id)}
-              style={({ pressed }) => [
-                styles.rechargeCard,
-                selectedAmount === option.id && styles.rechargeCardSelected,
-                pressed && styles.rechargeCardPressed,
-              ]}
-            >
-              {selectedAmount === option.id && (
-                <View style={styles.checkIconSmall}>
-                  <Check color="#FFFFFF" size={16} />
-                </View>
-              )}
-              <Text style={[
-                styles.rechargeAmount,
-                selectedAmount === option.id && styles.rechargeAmountSelected,
-              ]}>
-                {currencySymbol}{option.amount}
-              </Text>
-              {option.bonus && (
-                <View style={styles.bonusBadge}>
-                  <Text style={styles.bonusText}>{option.bonus}</Text>
-                </View>
-              )}
-            </Pressable>
-          ))}
-        </View>
+        {rechargesLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.success} />
+            <Text style={styles.loadingText}>Cargando recargas...</Text>
+          </View>
+        ) : recharges && recharges.length > 0 ? (
+          <>
+            <Text style={styles.sectionLabel}>Selecciona una Recarga</Text>
+            {recharges.map((item) => {
+              const price = getRechargePriceForCurrency(item, currency);
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setSelectedRecharge(item.id)}
+                  style={({ pressed }) => [
+                    styles.rechargeCard,
+                    selectedRecharge === item.id && styles.rechargeCardSelected,
+                    pressed && styles.rechargeCardPressed,
+                  ]}
+                >
+                  <View style={styles.rechargeHeader}>
+                    <View style={styles.rechargeInfo}>
+                      <Text style={styles.rechargeName}>{item.name}</Text>
+                      <Text style={styles.rechargeDescription}>{item.description}</Text>
+                      {item.notes && (
+                        <Text style={styles.rechargeNotes}>{item.notes}</Text>
+                      )}
+                    </View>
+                    <View style={styles.rechargePrice}>
+                      <Text style={styles.rechargePriceText}>{currencySymbol}{price.toFixed(2)}</Text>
+                    </View>
+                    {selectedRecharge === item.id && (
+                      <View style={styles.checkIcon}>
+                        <Check color={Colors.success} size={24} />
+                      </View>
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No hay recargas disponibles</Text>
+          </View>
+        )}
 
         <View style={styles.divider} />
 
@@ -145,43 +157,22 @@ export default function MobileRechargeScreen() {
           required
         />
 
-        <FormInput
-          label="Tu teléfono"
-          placeholder="+1 555 123 4567"
-          value={senderPhone}
-          onChangeText={setSenderPhone}
-          keyboardType="phone-pad"
-          required
-        />
-
-        <FormInput
-          label="Tu email (opcional)"
-          placeholder="maria@example.com"
-          value={senderEmail}
-          onChangeText={setSenderEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        {rechargeOption && (
+        {recharge && (
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Total:</Text>
               <Text style={styles.summaryValue}>
-                {currencySymbol}{rechargeOption.amount.toFixed(2)} {currency}
+                {currencySymbol}{rechargePrice.toFixed(2)} {currency}
               </Text>
             </View>
-            {rechargeOption.bonus && (
-              <Text style={styles.bonusInfo}>+ Bonificación: {rechargeOption.bonus}</Text>
-            )}
           </View>
         )}
 
         <Button
-          title="Enviar por WhatsApp"
+          title="Enviar Pedido"
           onPress={handleSubmit}
           loading={loading}
-          disabled={!selectedAmount}
+          disabled={!selectedRecharge || rechargesLoading}
         />
       </ScrollView>
     </>
@@ -236,24 +227,13 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 12,
   },
-  rechargeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 24,
-  },
   rechargeCard: {
-    flex: 1,
-    minWidth: '30%',
-    aspectRatio: 1.3,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 12,
     borderWidth: 2,
     borderColor: 'transparent',
-    position: 'relative' as const,
   },
   rechargeCardSelected: {
     borderColor: Colors.success,
@@ -262,34 +242,67 @@ const styles = StyleSheet.create({
   rechargeCardPressed: {
     opacity: 0.7,
   },
-  checkIconSmall: {
-    position: 'absolute' as const,
-    top: 8,
-    right: 8,
-    backgroundColor: Colors.success,
-    borderRadius: 12,
-    padding: 4,
+  rechargeHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    position: 'relative' as const,
   },
-  rechargeAmount: {
-    fontSize: 24,
+  rechargeInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  rechargeName: {
+    fontSize: 18,
     fontWeight: 'bold' as const,
     color: Colors.text,
     marginBottom: 4,
   },
-  rechargeAmountSelected: {
-    color: Colors.success,
+  rechargeDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
-  bonusBadge: {
-    backgroundColor: Colors.warning,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+  rechargeNotes: {
+    fontSize: 12,
+    color: Colors.warning,
+    fontStyle: 'italic' as const,
     marginTop: 4,
   },
-  bonusText: {
-    fontSize: 11,
+  rechargePrice: {
+    backgroundColor: Colors.success,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  rechargePriceText: {
+    fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#FFFFFF',
+  },
+  checkIcon: {
+    position: 'absolute' as const,
+    top: -4,
+    right: -4,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center' as const,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
   divider: {
     height: 1,
@@ -317,10 +330,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold' as const,
     color: Colors.success,
   },
-  bonusInfo: {
-    fontSize: 14,
-    color: Colors.warning,
-    fontWeight: '600' as const,
-    textAlign: 'center',
-  },
+
 });

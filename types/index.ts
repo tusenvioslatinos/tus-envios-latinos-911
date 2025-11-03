@@ -32,7 +32,7 @@ export interface Order {
   amount: number;
   currency: Currency;
   senderName: string;
-  senderPhone: string;
+  senderPhone?: string;
   senderEmail?: string;
   senderCountry: string;
   details?: any;

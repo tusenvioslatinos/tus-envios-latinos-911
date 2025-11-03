@@ -22,8 +22,6 @@ export default function RemittanceCardScreen() {
   const [recipient, setRecipient] = useState<Recipient | null>(null);
   const [amount, setAmount] = useState('');
   const [senderName, setSenderName] = useState('');
-  const [senderPhone, setSenderPhone] = useState('');
-  const [senderEmail, setSenderEmail] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState<'CLASICA' | 'MLC' | 'CUP'>('MLC');
   const [showAddCardModal, setShowAddCardModal] = useState(false);
   const [pendingRecipient, setPendingRecipient] = useState<Recipient | null>(null);
@@ -124,10 +122,6 @@ export default function RemittanceCardScreen() {
       Alert.alert('Error', 'Ingresa tu nombre');
       return false;
     }
-    if (!senderPhone.trim()) {
-      Alert.alert('Error', 'Ingresa tu teléfono');
-      return false;
-    }
     return true;
   };
 
@@ -142,8 +136,6 @@ export default function RemittanceCardScreen() {
         amount: parseFloat(amount),
         currency,
         senderName: senderName.trim(),
-        senderPhone: senderPhone.trim(),
-        senderEmail: senderEmail.trim() || undefined,
         senderCountry: userCountry || 'United States',
         details: {
           cardCurrency: selectedCurrency,
@@ -152,11 +144,7 @@ export default function RemittanceCardScreen() {
 
       await sendOrderViaWhatsApp(order);
       
-      Alert.alert(
-        '¡Orden Enviada!',
-        'Tu orden ha sido enviada por WhatsApp. Recibirás las instrucciones de pago.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      router.back();
     } catch {
       Alert.alert('Error', 'No se pudo enviar la orden. Intenta nuevamente.');
     } finally {
@@ -244,24 +232,6 @@ export default function RemittanceCardScreen() {
           required
         />
 
-        <FormInput
-          label="Tu teléfono"
-          placeholder="+1 555 123 4567"
-          value={senderPhone}
-          onChangeText={setSenderPhone}
-          keyboardType="phone-pad"
-          required
-        />
-
-        <FormInput
-          label="Tu email (opcional)"
-          placeholder="maria@example.com"
-          value={senderEmail}
-          onChangeText={setSenderEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
         <View style={styles.summaryCard}>
           {ratesLoading || locationsLoading ? (
             <View style={styles.rateLoading}>
@@ -290,7 +260,7 @@ export default function RemittanceCardScreen() {
         </View>
 
         <Button
-          title="Enviar por WhatsApp"
+          title="Enviar Pedido"
           onPress={handleSubmit}
           loading={loading}
         />

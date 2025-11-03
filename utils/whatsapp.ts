@@ -57,6 +57,32 @@ function formatFoodComboMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'
   return message;
 }
 
+function formatMobileRechargeMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+  const flag = getCountryFlag(order.senderCountry);
+  const orderId = generateRandomId();
+  const currencySymbol = CURRENCY_SYMBOLS[order.currency];
+  
+  let message = `${flag} *RESUMEN DE ENTREGA*\n`;
+  message += `📝ID: ${orderId}\n`;
+  message += `📱 Recarga: ${order.details?.rechargeName || ''}\n`;
+  
+  if (order.details?.rechargeDescription) {
+    message += `📋 Descripción: ${order.details.rechargeDescription}\n`;
+  }
+  
+  message += `☎️ Número: ${order.recipient.phone}\n`;
+  message += `👤 Recibe: ${order.recipient.name}\n`;
+  message += `👨‍⚕️ Envía: ${order.senderName}\n`;
+  
+  if (order.details?.notes) {
+    message += `📝 Notas: ${order.details.notes}\n`;
+  }
+  
+  message += `💰 Monto a pagar: ${currencySymbol}${order.amount.toFixed(2)} ${order.currency}`;
+  
+  return message;
+}
+
 function formatRemittanceCashMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
   const flag = getCountryFlag(order.senderCountry);
   const orderId = generateRandomId();
@@ -90,6 +116,30 @@ function formatRemittanceCashMessage(order: Omit<Order, 'id' | 'createdAt' | 'st
   return message;
 }
 
+function formatRemittanceCardMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+  const flag = getCountryFlag(order.senderCountry);
+  const orderId = generateRandomId();
+  const currencySymbol = CURRENCY_SYMBOLS[order.currency];
+  const cardCurrency = (order.details?.cardCurrency as CardCurrency) || 'MLC';
+  const card = order.recipient.cards?.[cardCurrency];
+  
+  let message = `${flag} *RESUMEN DE ENTREGA*\n`;
+  message += `📝ID: ${orderId}\n`;
+  message += `💳 Tarjeta ${cardCurrency}: ${card?.number || 'N/A'}\n`;
+  
+  if (card?.type) {
+    message += `🏦 Tipo: ${card.type}\n`;
+  }
+  
+  message += `💵 Cantidad: ${order.amount.toFixed(2)} ${cardCurrency}\n`;
+  message += `👤 Recibe: ${order.recipient.name}\n`;
+  message += `📱 Contacto: ${order.recipient.phone}\n`;
+  message += `👨‍⚕️ Envía: ${order.senderName}\n`;
+  message += `💰 Monto a pagar: ${currencySymbol}${order.amount.toFixed(2)} ${order.currency}`;
+  
+  return message;
+}
+
 function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
   if (order.type === 'food-combo') {
     return formatFoodComboMessage(order);
@@ -99,53 +149,13 @@ function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): 
     return formatRemittanceCashMessage(order);
   }
   
-  const currencySymbol = CURRENCY_SYMBOLS[order.currency];
-  const serviceNames: Record<string, string> = {
-    'remittance-cash': 'Envío en Efectivo',
-    'remittance-card': 'Envío a Tarjeta',
-    'food-combo': 'Combo de Comida',
-    'mobile-recharge': 'Recarga Celular',
-  };
-
-  let message = `🚀 *NUEVA ORDEN - ${serviceNames[order.type]}*\n\n`;
-  
-  message += `📋 *Información del Remitente*\n`;
-  message += `Nombre: ${order.senderName}\n`;
-  message += `Teléfono: ${order.senderPhone}\n`;
-  if (order.senderEmail) {
-    message += `Email: ${order.senderEmail}\n`;
-  }
-  message += `País: ${order.senderCountry}\n\n`;
-  
-  message += `👤 *Información del Destinatario*\n`;
-  message += `Nombre: ${order.recipient.name}\n`;
-  message += `Teléfono: ${order.recipient.phone}\n`;
-  
-  if (order.type === 'remittance-card' && order.details?.cardCurrency) {
-    const cardCurrency = order.details.cardCurrency as CardCurrency;
-    const card = order.recipient.cards?.[cardCurrency];
-    if (card) {
-      message += `Tarjeta ${cardCurrency}: ${card.number}\n`;
-      if (card.type) {
-        message += `Tipo: ${card.type}\n`;
-      }
-    }
+  if (order.type === 'remittance-card') {
+    return formatRemittanceCardMessage(order);
   }
   
-  message += `\n💰 *Detalles del Envío*\n`;
-  message += `Monto: ${currencySymbol}${order.amount.toFixed(2)} ${order.currency}\n`;
-  
-  if (order.details) {
-    if (order.type === 'mobile-recharge' && order.details.rechargeAmount) {
-      message += `Recarga: ${order.details.rechargeAmount}\n`;
-      if (order.details.bonus) {
-        message += `Bonificación: ${order.details.bonus}\n`;
-      }
-    }
+  if (order.type === 'mobile-recharge') {
+    return formatMobileRechargeMessage(order);
   }
   
-  message += `\n✅ _Pedido generado desde la app Tus Envíos Latinos_\n`;
-  message += `⏰ ${new Date().toLocaleString('es-ES')}`;
-  
-  return message;
+  return '';
 }

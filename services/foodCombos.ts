@@ -20,7 +20,7 @@ export async function fetchFoodCombos(): Promise<FoodComboFromCSV[]> {
     
     const combos: FoodComboFromCSV[] = [];
     
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = 1; i < lines.length; i++) {
       const columns = lines[i].split(',').map(col => col.trim());
       console.log(`[FoodCombos] Line ${i}:`, columns);
       

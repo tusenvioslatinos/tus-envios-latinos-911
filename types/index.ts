@@ -1,6 +1,6 @@
 export type Currency = 'USD' | 'MXN' | 'EUR';
 
-export type CardCurrency = 'CLASICA' | 'MLC' | 'CUP';
+export type CardCurrency = 'CLASICA' | 'MLC' | 'CUP' | 'USD';
 
 export type ServiceType = 'remittance-cash' | 'remittance-card' | 'food-combo' | 'mobile-recharge';
 

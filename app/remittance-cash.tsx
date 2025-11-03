@@ -40,8 +40,11 @@ export default function RemittanceCashScreen() {
     : 0;
 
   const amountToReceive = amount ? parseFloat(amount) : 0;
-  const totalToSend = amountToReceive && exchangeRates && userCountry
-    ? amountToReceive / getExchangeRate(userCountry, receiveCurrency, exchangeRates)
+  const exchangeRate = exchangeRates && userCountry
+    ? getExchangeRate(userCountry, receiveCurrency, exchangeRates)
+    : 0;
+  const totalToSend = amountToReceive && exchangeRate
+    ? amountToReceive * exchangeRate
     : 0;
   const totalAmount = totalToSend + deliveryCost;
 
@@ -194,12 +197,11 @@ export default function RemittanceCashScreen() {
                   {currencySymbol}{totalAmount.toFixed(2)} {currency}
                 </Text>
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Total a enviar:</Text>
-                <Text style={styles.summaryValueLarge}>
-                  {(amountToReceive + (deliveryCost * (exchangeRates && userCountry ? getExchangeRate(userCountry, receiveCurrency, exchangeRates) : 1))).toFixed(2)} {receiveCurrency}
+              {exchangeRate > 0 && (
+                <Text style={styles.exchangeRateText}>
+                  Tasa: 1 {currency} = {exchangeRate.toFixed(2)} {receiveCurrency}
                 </Text>
-              </View>
+              )}
             </>
           )}
         </View>
@@ -302,5 +304,11 @@ const styles = StyleSheet.create({
   rateLoadingText: {
     fontSize: 14,
     color: Colors.textSecondary,
+  },
+  exchangeRateText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 8,
+    textAlign: 'center' as const,
   },
 });

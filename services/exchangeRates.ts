@@ -49,8 +49,8 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
         const currencyType = parts[1].replace(/"/g, '').trim() as CardCurrency;
         
         let value = 0;
-        const valueStr = parts.slice(2).join('').replace(/"/g, '').trim();
-        value = parseFloat(valueStr.replace(',', '.')) || 0;
+        const valueStr = parts.slice(2).join('.').replace(/"/g, '').trim();
+        value = parseFloat(valueStr) || 0;
         
         console.log(`[ExchangeRates] Line ${i}: country=${country}, currency=${currencyType}, value=${value}`);
         

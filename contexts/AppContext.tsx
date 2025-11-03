@@ -112,11 +112,19 @@ export const [AppProvider, useApp] = createContextHook(() => {
     setUserCountry(country);
     await AsyncStorage.setItem(STORAGE_KEYS.USER_COUNTRY, country);
     
-    const currencyMap: Record<string, Currency> = {
-      'United States': 'USD',
-      'Mexico': 'MXN',
-    };
-    const newCurrency = currencyMap[country] || 'EUR';
+    let newCurrency: Currency = 'EUR';
+    
+    const normalizedCountry = country.toLowerCase();
+    
+    if (normalizedCountry.includes('united states') || normalizedCountry.includes('estados unidos')) {
+      newCurrency = 'USD';
+    } else if (normalizedCountry.includes('mexico') || normalizedCountry.includes('méxico')) {
+      newCurrency = 'MXN';
+    } else {
+      newCurrency = 'EUR';
+    }
+    
+    console.log('[AppContext] Country:', country, '→ Currency:', newCurrency);
     await updateCurrency(newCurrency);
   }, [updateCurrency]);
 

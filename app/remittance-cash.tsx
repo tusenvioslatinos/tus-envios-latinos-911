@@ -6,11 +6,11 @@ import Colors from '@/constants/colors';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
 import RecipientSelector from '@/components/RecipientSelector';
-import { CardCurrency, Recipient } from '@/types';
+import { Recipient } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 import { useQuery } from '@tanstack/react-query';
-import { fetchExchangeRates, getExchangeRate } from '@/services/exchangeRates';
+import { fetchExchangeRates, getExchangeRate, CardCurrency } from '@/services/exchangeRates';
 import { fetchLocations, getDeliveryCost } from '@/services/locations';
 
 export default function RemittanceCashScreen() {

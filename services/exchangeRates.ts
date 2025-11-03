@@ -78,22 +78,18 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
       console.log(`[ExchangeRates] Line ${i}:`, columns);
       
       if (columns.length >= 3) {
-        const rawValue = columns[2];
         let value = 0;
         
-        if (rawValue.includes(',')) {
-          const parts = rawValue.split(',');
-          if (parts.length >= 2) {
-            const wholePart = parts[0].replace(/"/g, '').trim();
-            const decimalPart = parts[1].replace(/"/g, '').trim();
-            const fullNumber = wholePart + '.' + decimalPart;
-            value = parseFloat(fullNumber) || 0;
-          }
+        if (columns.length === 4 && columns[2] !== '' && columns[3] !== '') {
+          const wholePart = columns[2].replace(/"/g, '').trim();
+          const decimalPart = columns[3].replace(/"/g, '').trim();
+          const fullNumber = wholePart + '.' + decimalPart;
+          value = parseFloat(fullNumber) || 0;
+          console.log(`[ExchangeRates] Line ${i} combined value: ${wholePart}.${decimalPart} = ${value}`);
         } else {
-          value = parseDecimalValue(rawValue);
+          value = parseDecimalValue(columns[2]);
+          console.log(`[ExchangeRates] Line ${i} single value: ${columns[2]} = ${value}`);
         }
-        
-        console.log(`[ExchangeRates] Line ${i} raw value:`, rawValue, '→ parsed:', value);
         
         if (i === 0) rates['United States'].CLASICA = value;
         else if (i === 1) rates['United States'].MLC = value;

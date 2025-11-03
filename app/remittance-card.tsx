@@ -285,11 +285,6 @@ export default function RemittanceCardScreen() {
                   {currencySymbol}{totalAmount.toFixed(2)} {currency}
                 </Text>
               </View>
-              {exchangeRate > 0 && (
-                <Text style={styles.exchangeRateText}>
-                  Tasa: 1 {currency} = {exchangeRate.toFixed(2)} {cardCurrency}
-                </Text>
-              )}
             </>
           )}
         </View>

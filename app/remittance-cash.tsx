@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
@@ -6,9 +6,11 @@ import Colors from '@/constants/colors';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
 import RecipientSelector from '@/components/RecipientSelector';
-import { Recipient } from '@/types';
+import { CardCurrency, Recipient } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
+import { useQuery } from '@tanstack/react-query';
+import { fetchExchangeRates, calculateAmountToReceive } from '@/services/exchangeRates';
 
 export default function RemittanceCashScreen() {
   const router = useRouter();
@@ -17,9 +19,19 @@ export default function RemittanceCashScreen() {
   
   const [recipient, setRecipient] = useState<Recipient | null>(null);
   const [amount, setAmount] = useState('');
+  const [receiveCurrency, setReceiveCurrency] = useState<CardCurrency>('CUP');
   const [senderName, setSenderName] = useState('');
   const [senderPhone, setSenderPhone] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
+
+  const { data: exchangeRates, isLoading: ratesLoading } = useQuery({
+    queryKey: ['exchangeRates'],
+    queryFn: fetchExchangeRates,
+  });
+
+  const amountToReceive = amount && exchangeRates
+    ? calculateAmountToReceive(parseFloat(amount), userCountry, receiveCurrency, exchangeRates)
+    : 0;
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
 
@@ -84,6 +96,20 @@ export default function RemittanceCashScreen() {
           </Text>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Moneda a recibir</Text>
+          <View style={styles.currencyButtons}>
+            {(['USD', 'MLC', 'CUP'] as CardCurrency[]).map((curr) => (
+              <Button
+                key={curr}
+                title={curr}
+                onPress={() => setReceiveCurrency(curr)}
+                variant={receiveCurrency === curr ? 'primary' : 'secondary'}
+              />
+            ))}
+          </View>
+        </View>
+
         <RecipientSelector
           label="Destinatario"
           value={recipient}
@@ -134,6 +160,19 @@ export default function RemittanceCashScreen() {
               {currencySymbol}{amount || '0.00'} {currency}
             </Text>
           </View>
+          {ratesLoading ? (
+            <View style={styles.rateLoading}>
+              <ActivityIndicator size="small" color={Colors.primary} />
+              <Text style={styles.rateLoadingText}>Cargando tasas...</Text>
+            </View>
+          ) : (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Monto a recibir:</Text>
+              <Text style={styles.summaryValueReceive}>
+                {amountToReceive.toFixed(2)} {receiveCurrency}
+              </Text>
+            </View>
+          )}
         </View>
 
         <Button
@@ -172,6 +211,19 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 20,
   },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 12,
+  },
+  currencyButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   divider: {
     height: 1,
     backgroundColor: Colors.border,
@@ -182,6 +234,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginBottom: 24,
+    gap: 16,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -196,5 +249,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold' as const,
     color: Colors.primary,
+  },
+  summaryValueReceive: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: Colors.secondary,
+  },
+  rateLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rateLoadingText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
 });

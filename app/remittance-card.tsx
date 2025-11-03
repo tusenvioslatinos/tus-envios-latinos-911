@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
@@ -9,6 +9,8 @@ import RecipientSelector from '@/components/RecipientSelector';
 import { Recipient } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
+import { useQuery } from '@tanstack/react-query';
+import { fetchExchangeRates, calculateAmountToReceive } from '@/services/exchangeRates';
 
 export default function RemittanceCardScreen() {
   const router = useRouter();
@@ -23,6 +25,17 @@ export default function RemittanceCardScreen() {
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
 
+  const { data: exchangeRates, isLoading: ratesLoading } = useQuery({
+    queryKey: ['exchangeRates'],
+    queryFn: fetchExchangeRates,
+  });
+
+  const cardCurrency = recipient?.cardCurrency || 'USD';
+
+  const amountToReceive = amount && exchangeRates
+    ? calculateAmountToReceive(parseFloat(amount), userCountry, cardCurrency, exchangeRates)
+    : 0;
+
   const validate = () => {
     if (!recipient) {
       Alert.alert('Error', 'Selecciona un destinatario');
@@ -30,6 +43,10 @@ export default function RemittanceCardScreen() {
     }
     if (!recipient.cardNumber) {
       Alert.alert('Error', 'El destinatario debe tener número de tarjeta');
+      return false;
+    }
+    if (!recipient.cardCurrency) {
+      Alert.alert('Error', 'El destinatario debe tener moneda de tarjeta seleccionada');
       return false;
     }
     if (!amount || parseFloat(amount) <= 0) {
@@ -96,8 +113,17 @@ export default function RemittanceCardScreen() {
 
         {recipient?.cardNumber && (
           <View style={styles.cardInfo}>
-            <Text style={styles.cardLabel}>Tarjeta:</Text>
-            <Text style={styles.cardNumber}>{recipient.cardNumber}</Text>
+            <View style={styles.cardRow}>
+              <View>
+                <Text style={styles.cardLabel}>Tarjeta:</Text>
+                <Text style={styles.cardNumber}>{recipient.cardNumber}</Text>
+              </View>
+              {recipient.cardCurrency && (
+                <View style={styles.currencyBadge}>
+                  <Text style={styles.currencyBadgeText}>{recipient.cardCurrency}</Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
 
@@ -145,6 +171,19 @@ export default function RemittanceCardScreen() {
               {currencySymbol}{amount || '0.00'} {currency}
             </Text>
           </View>
+          {ratesLoading ? (
+            <View style={styles.rateLoading}>
+              <ActivityIndicator size="small" color="#7C3AED" />
+              <Text style={styles.rateLoadingText}>Cargando tasas...</Text>
+            </View>
+          ) : (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Monto a recibir en tarjeta:</Text>
+              <Text style={styles.summaryValueReceive}>
+                {amountToReceive.toFixed(2)} {cardCurrency}
+              </Text>
+            </View>
+          )}
         </View>
 
         <Button
@@ -189,6 +228,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
   },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   cardLabel: {
     fontSize: 12,
     color: Colors.textSecondary,
@@ -198,6 +242,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600' as const,
     color: Colors.text,
+  },
+  currencyBadge: {
+    backgroundColor: '#7C3AED',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  currencyBadgeText: {
+    fontSize: 14,
+    fontWeight: 'bold' as const,
+    color: '#FFFFFF',
   },
   divider: {
     height: 1,
@@ -209,6 +264,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginBottom: 24,
+    gap: 16,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -223,5 +279,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold' as const,
     color: '#7C3AED',
+  },
+  summaryValueReceive: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: Colors.secondary,
+  },
+  rateLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rateLoadingText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
 });

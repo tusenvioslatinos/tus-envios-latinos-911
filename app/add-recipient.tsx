@@ -1,10 +1,11 @@
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
+import { CardCurrency } from '@/types';
 
 export default function AddRecipientScreen() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function AddRecipientScreen() {
     municipality: '',
     cardNumber: '',
     cardType: '',
+    cardCurrency: undefined as CardCurrency | undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,6 +55,7 @@ export default function AddRecipientScreen() {
         municipality: formData.municipality.trim() || undefined,
         cardNumber: formData.cardNumber.trim() || undefined,
         cardType: formData.cardType.trim() || undefined,
+        cardCurrency: formData.cardCurrency,
       });
       
       Alert.alert('Éxito', 'Destinatario agregado correctamente');
@@ -120,10 +123,25 @@ export default function AddRecipientScreen() {
 
         <FormInput
           label="Tipo de Tarjeta (opcional)"
-          placeholder="MLC, CUP, etc."
+          placeholder="Débito, Crédito, etc."
           value={formData.cardType}
           onChangeText={(text) => setFormData(prev => ({ ...prev, cardType: text }))}
         />
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Moneda de la Tarjeta</Text>
+          <Text style={styles.sectionSubtitle}>Selecciona la moneda de la tarjeta del destinatario</Text>
+          <View style={styles.currencyButtons}>
+            {(['USD', 'MLC', 'CUP'] as CardCurrency[]).map((curr) => (
+              <Button
+                key={curr}
+                title={curr}
+                onPress={() => setFormData(prev => ({ ...prev, cardCurrency: curr }))}
+                variant={formData.cardCurrency === curr ? 'primary' : 'secondary'}
+              />
+            ))}
+          </View>
+        </View>
 
         <View style={styles.buttons}>
           <Button
@@ -145,6 +163,25 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 40,
+  },
+  section: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 6,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 12,
+  },
+  currencyButtons: {
+    flexDirection: 'row',
+    gap: 12,
   },
   buttons: {
     marginTop: 12,

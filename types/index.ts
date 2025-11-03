@@ -1,5 +1,7 @@
 export type Currency = 'USD' | 'MXN' | 'EUR';
 
+export type CardCurrency = 'USD' | 'MLC' | 'CUP';
+
 export type ServiceType = 'remittance-cash' | 'remittance-card' | 'food-combo' | 'mobile-recharge';
 
 export interface Recipient {
@@ -9,6 +11,7 @@ export interface Recipient {
   address?: string;
   cardNumber?: string;
   cardType?: string;
+  cardCurrency?: CardCurrency;
   province?: string;
   municipality?: string;
   createdAt: string;

@@ -13,6 +13,7 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Atrás" }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="country-selection" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen 
         name="remittance-cash" 

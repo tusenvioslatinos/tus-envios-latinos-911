@@ -142,6 +142,9 @@ export default function RemittanceCardScreen() {
         senderPhone: senderPhone.trim(),
         senderEmail: senderEmail.trim() || undefined,
         senderCountry: userCountry || 'United States',
+        details: {
+          cardCurrency: selectedCurrency,
+        },
       });
 
       await sendOrderViaWhatsApp(order);

@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Alert, Text, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, Pressable, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Check } from 'lucide-react-native';
@@ -9,7 +9,9 @@ import Button from '@/components/Button';
 import RecipientSelector from '@/components/RecipientSelector';
 import { Recipient } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
-import { CURRENCY_SYMBOLS, FOOD_COMBOS } from '@/constants/data';
+import { CURRENCY_SYMBOLS } from '@/constants/data';
+import { useQuery } from '@tanstack/react-query';
+import { fetchFoodCombos, getComboPriceForCurrency } from '@/services/foodCombos';
 
 export default function FoodComboScreen() {
   const router = useRouter();
@@ -22,8 +24,14 @@ export default function FoodComboScreen() {
   const [senderPhone, setSenderPhone] = useState('');
   const [senderEmail, setSenderEmail] = useState('');
 
+  const { data: combos, isLoading: combosLoading } = useQuery({
+    queryKey: ['foodCombos'],
+    queryFn: fetchFoodCombos,
+  });
+
   const currencySymbol = CURRENCY_SYMBOLS[currency];
-  const combo = FOOD_COMBOS.find(c => c.id === selectedCombo);
+  const combo = combos?.find(c => c.id === selectedCombo);
+  const comboPrice = combo ? getComboPriceForCurrency(combo, currency) : 0;
 
   const validate = () => {
     if (!recipient) {
@@ -53,15 +61,15 @@ export default function FoodComboScreen() {
       const order = await addOrder({
         type: 'food-combo',
         recipient,
-        amount: combo.price,
+        amount: comboPrice,
         currency,
         senderName: senderName.trim(),
         senderPhone: senderPhone.trim(),
         senderEmail: senderEmail.trim() || undefined,
-        senderCountry: userCountry,
+        senderCountry: userCountry || 'United States',
         details: {
           comboName: combo.name,
-          items: combo.items,
+          comboDescription: combo.description,
         },
       });
 
@@ -96,38 +104,49 @@ export default function FoodComboScreen() {
           onChange={setRecipient}
         />
 
-        <Text style={styles.sectionLabel}>Selecciona un Combo</Text>
-        {FOOD_COMBOS.map((item) => (
-          <Pressable
-            key={item.id}
-            onPress={() => setSelectedCombo(item.id)}
-            style={({ pressed }) => [
-              styles.comboCard,
-              selectedCombo === item.id && styles.comboCardSelected,
-              pressed && styles.comboCardPressed,
-            ]}
-          >
-            <View style={styles.comboHeader}>
-              <View style={styles.comboInfo}>
-                <Text style={styles.comboName}>{item.name}</Text>
-                <Text style={styles.comboDescription}>{item.description}</Text>
-              </View>
-              <View style={styles.comboPrice}>
-                <Text style={styles.comboPriceText}>{currencySymbol}{item.price}</Text>
-              </View>
-              {selectedCombo === item.id && (
-                <View style={styles.checkIcon}>
-                  <Check color={Colors.primary} size={24} />
-                </View>
-              )}
-            </View>
-            <View style={styles.comboItems}>
-              {item.items.map((product, idx) => (
-                <Text key={idx} style={styles.comboItem}>• {product}</Text>
-              ))}
-            </View>
-          </Pressable>
-        ))}
+        {combosLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Cargando combos...</Text>
+          </View>
+        ) : combos && combos.length > 0 ? (
+          <>
+            <Text style={styles.sectionLabel}>Selecciona un Combo</Text>
+            {combos.map((item) => {
+              const price = getComboPriceForCurrency(item, currency);
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setSelectedCombo(item.id)}
+                  style={({ pressed }) => [
+                    styles.comboCard,
+                    selectedCombo === item.id && styles.comboCardSelected,
+                    pressed && styles.comboCardPressed,
+                  ]}
+                >
+                  <View style={styles.comboHeader}>
+                    <View style={styles.comboInfo}>
+                      <Text style={styles.comboName}>{item.name}</Text>
+                      <Text style={styles.comboDescription}>{item.description}</Text>
+                    </View>
+                    <View style={styles.comboPrice}>
+                      <Text style={styles.comboPriceText}>{currencySymbol}{price.toFixed(2)}</Text>
+                    </View>
+                    {selectedCombo === item.id && (
+                      <View style={styles.checkIcon}>
+                        <Check color={Colors.primary} size={24} />
+                      </View>
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No hay combos disponibles</Text>
+          </View>
+        )}
 
         <View style={styles.divider} />
 
@@ -162,17 +181,17 @@ export default function FoodComboScreen() {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Total:</Text>
               <Text style={styles.summaryValue}>
-                {currencySymbol}{combo.price.toFixed(2)} {currency}
+                {currencySymbol}{comboPrice.toFixed(2)} {currency}
               </Text>
             </View>
           </View>
         )}
 
         <Button
-          title="Enviar por WhatsApp"
+          title="Enviar Pedido"
           onPress={handleSubmit}
           loading={loading}
-          disabled={!selectedCombo}
+          disabled={!selectedCombo || combosLoading}
         />
       </ScrollView>
     </>
@@ -264,13 +283,23 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 12,
   },
-  comboItems: {
-    gap: 4,
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
-  comboItem: {
-    fontSize: 13,
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
     color: Colors.textSecondary,
-    lineHeight: 18,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center' as const,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
   divider: {
     height: 1,

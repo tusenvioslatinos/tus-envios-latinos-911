@@ -1,5 +1,5 @@
 import { Linking } from 'react-native';
-import { Order } from '@/types';
+import { Order, CardCurrency } from '@/types';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 
 const WHATSAPP_NUMBER = '14023131333';
@@ -52,10 +52,14 @@ function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): 
     }
   }
   
-  if (order.type === 'remittance-card' && order.recipient.cardNumber) {
-    message += `Tarjeta: ${order.recipient.cardNumber}\n`;
-    if (order.recipient.cardType) {
-      message += `Tipo: ${order.recipient.cardType}\n`;
+  if (order.type === 'remittance-card' && order.details?.cardCurrency) {
+    const cardCurrency = order.details.cardCurrency as CardCurrency;
+    const card = order.recipient.cards?.[cardCurrency];
+    if (card) {
+      message += `Tarjeta ${cardCurrency}: ${card.number}\n`;
+      if (card.type) {
+        message += `Tipo: ${card.type}\n`;
+      }
     }
   }
   
@@ -65,6 +69,9 @@ function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): 
   if (order.details) {
     if (order.type === 'food-combo' && order.details.comboName) {
       message += `Combo: ${order.details.comboName}\n`;
+      if (order.details.comboDescription) {
+        message += `Descripción: ${order.details.comboDescription}\n`;
+      }
       if (order.details.items && order.details.items.length > 0) {
         message += `Productos: ${order.details.items.join(', ')}\n`;
       }

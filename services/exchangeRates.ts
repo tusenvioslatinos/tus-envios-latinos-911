@@ -1,22 +1,25 @@
 const EXCHANGE_RATES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQg6fZQxbXm1c_rKzeZHB69OpzWiBj_cVuQP1Gv0yC5vkjaM2gFCFBw7QZAwh0cfTMf8E2jvsD-ZO99/pub?gid=0&single=true&output=csv';
 
-export type CardCurrency = 'CLASICA' | 'MLC' | 'CUP';
+export type CardCurrency = 'CLASICA' | 'MLC' | 'CUP' | 'USD';
 
 export interface ExchangeRates {
   'United States': {
     CLASICA: number;
     MLC: number;
     CUP: number;
+    USD: number;
   };
   'Mexico': {
     CLASICA: number;
     MLC: number;
     CUP: number;
+    USD: number;
   };
   'Europa': {
     CLASICA: number;
     MLC: number;
     CUP: number;
+    USD: number;
   };
 }
 
@@ -63,9 +66,9 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
     const lines = csvText.split('\n').filter(line => line.trim());
     
     const rates: ExchangeRates = {
-      'United States': { CLASICA: 0, MLC: 0, CUP: 0 },
-      'Mexico': { CLASICA: 0, MLC: 0, CUP: 0 },
-      'Europa': { CLASICA: 0, MLC: 0, CUP: 0 },
+      'United States': { CLASICA: 0, MLC: 0, CUP: 0, USD: 1 },
+      'Mexico': { CLASICA: 0, MLC: 0, CUP: 0, USD: 1 },
+      'Europa': { CLASICA: 0, MLC: 0, CUP: 0, USD: 1 },
     };
 
     console.log('[ExchangeRates] Total lines:', lines.length);
@@ -109,9 +112,9 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
   } catch (error) {
     console.error('[ExchangeRates] Error fetching rates:', error);
     return {
-      'United States': { CLASICA: 1.0, MLC: 1.0, CUP: 120 },
-      'Mexico': { CLASICA: 0.95, MLC: 0.95, CUP: 115 },
-      'Europa': { CLASICA: 0.90, MLC: 0.90, CUP: 110 },
+      'United States': { CLASICA: 1.0, MLC: 1.0, CUP: 120, USD: 1 },
+      'Mexico': { CLASICA: 0.95, MLC: 0.95, CUP: 115, USD: 1 },
+      'Europa': { CLASICA: 0.90, MLC: 0.90, CUP: 110, USD: 1 },
     };
   }
 }

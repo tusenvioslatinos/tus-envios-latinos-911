@@ -109,16 +109,6 @@ function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): 
   message += `Monto: ${currencySymbol}${order.amount.toFixed(2)} ${order.currency}\n`;
   
   if (order.details) {
-    if (order.type === 'food-combo' && order.details.comboName) {
-      message += `Combo: ${order.details.comboName}\n`;
-      if (order.details.comboDescription) {
-        message += `Descripción: ${order.details.comboDescription}\n`;
-      }
-      if (order.details.items && order.details.items.length > 0) {
-        message += `Productos: ${order.details.items.join(', ')}\n`;
-      }
-    }
-    
     if (order.type === 'mobile-recharge' && order.details.rechargeAmount) {
       message += `Recarga: ${order.details.rechargeAmount}\n`;
       if (order.details.bonus) {

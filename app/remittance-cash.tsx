@@ -35,7 +35,7 @@ export default function RemittanceCashScreen() {
     queryFn: fetchLocations,
   });
 
-  const deliveryCost = recipient && locationData && recipient.province && recipient.municipality
+  const messengingCost = recipient && locationData && recipient.province && recipient.municipality
     ? getDeliveryCost(recipient.province, recipient.municipality, userCountry || '', locationData)
     : 0;
 
@@ -52,10 +52,10 @@ export default function RemittanceCashScreen() {
   const totalToSend = amountToReceive && exchangeRate
     ? amountToReceive * exchangeRate
     : 0;
-  const totalAmount = totalToSend + deliveryCost;
+  const totalAmount = totalToSend + messengingCost;
   
   console.log('[RemittanceCash] totalToSend:', totalToSend);
-  console.log('[RemittanceCash] deliveryCost:', deliveryCost);
+  console.log('[RemittanceCash] messengingCost:', messengingCost);
   console.log('[RemittanceCash] totalAmount:', totalAmount);
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
@@ -192,18 +192,26 @@ export default function RemittanceCashScreen() {
                   {amountToReceive.toFixed(2)} {receiveCurrency}
                 </Text>
               </View>
-              {deliveryCost > 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Costo de mensajería:</Text>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Monto a pagar:</Text>
+                <Text style={styles.summaryValue}>
+                  {currencySymbol}{totalToSend.toFixed(2)} {currency}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Mensajería:</Text>
+                {messengingCost > 0 ? (
                   <Text style={styles.summaryValue}>
-                    {currencySymbol}{deliveryCost.toFixed(2)} {currency}
+                    {currencySymbol}{messengingCost.toFixed(2)} {currency}
                   </Text>
-                </View>
-              )}
+                ) : (
+                  <Text style={styles.summaryValueFree}>Gratis</Text>
+                )}
+              </View>
               <View style={styles.dividerSmall} />
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Total a pagar:</Text>
-                <Text style={styles.summaryValue}>
+                <Text style={styles.summaryValueLarge}>
                   {currencySymbol}{totalAmount.toFixed(2)} {currency}
                 </Text>
               </View>
@@ -299,7 +307,12 @@ const styles = StyleSheet.create({
   summaryValueLarge: {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: Colors.secondary,
+    color: Colors.primary,
+  },
+  summaryValueFree: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: Colors.success || '#22C55E',
   },
   dividerSmall: {
     height: 1,

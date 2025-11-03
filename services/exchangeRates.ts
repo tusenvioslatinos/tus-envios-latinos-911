@@ -39,30 +39,31 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
 
     console.log('[ExchangeRates] Total lines:', lines.length);
     
-    for (let i = 0; i < lines.length && i < 9; i++) {
+    for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       console.log(`[ExchangeRates] Processing line ${i}:`, line);
       
       const parts = line.split(',');
       if (parts.length >= 3) {
         const country = parts[0].replace(/"/g, '').trim();
-        const currencyType = parts[1].replace(/"/g, '').trim();
+        const currencyType = parts[1].replace(/"/g, '').trim() as CardCurrency;
         
         let value = 0;
-        const remainingParts = parts.slice(2).join('.').replace(/"/g, '').trim();
-        value = parseFloat(remainingParts) || 0;
+        const valueStr = parts.slice(2).join('').replace(/"/g, '').trim();
+        value = parseFloat(valueStr.replace(',', '.')) || 0;
         
         console.log(`[ExchangeRates] Line ${i}: country=${country}, currency=${currencyType}, value=${value}`);
         
-        if (i === 0) rates['United States'].CLASICA = value;
-        else if (i === 1) rates['United States'].MLC = value;
-        else if (i === 2) rates['United States'].CUP = value;
-        else if (i === 3) rates['Mexico'].CLASICA = value;
-        else if (i === 4) rates['Mexico'].MLC = value;
-        else if (i === 5) rates['Mexico'].CUP = value;
-        else if (i === 6) rates['Europa'].CLASICA = value;
-        else if (i === 7) rates['Europa'].MLC = value;
-        else if (i === 8) rates['Europa'].CUP = value;
+        let normalizedCountry: keyof ExchangeRates | null = null;
+        if (country === 'USA') normalizedCountry = 'United States';
+        else if (country === 'MEXICO') normalizedCountry = 'Mexico';
+        else if (country === 'EUROPE') normalizedCountry = 'Europa';
+        
+        if (normalizedCountry && (currencyType === 'USD' || currencyType === 'MLC' || currencyType === 'CUP')) {
+          rates[normalizedCountry][currencyType] = value;
+        } else if (normalizedCountry && currencyType === 'USD') {
+          rates[normalizedCountry].CLASICA = value;
+        }
       }
     }
     

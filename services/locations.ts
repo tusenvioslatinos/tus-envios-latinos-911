@@ -103,9 +103,17 @@ export function getDeliveryCost(
   
   console.log('[Locations] Location found:', location);
   
-  const normalizedCountry = country.includes('Europe') || country === 'España' || country === 'Spain' 
-    ? 'Europa' 
-    : country as keyof Location['deliveryCost'];
+  let normalizedCountry: keyof Location['deliveryCost'];
+  
+  if (country.includes('Europe') || country === 'España' || country === 'Spain' || country === 'Europa') {
+    normalizedCountry = 'Europa';
+  } else if (country === 'Estados Unidos' || country === 'United States' || country === 'USA') {
+    normalizedCountry = 'United States';
+  } else if (country === 'México' || country === 'Mexico') {
+    normalizedCountry = 'Mexico';
+  } else {
+    normalizedCountry = country as keyof Location['deliveryCost'];
+  }
   
   console.log('[Locations] Normalized country:', normalizedCountry);
   

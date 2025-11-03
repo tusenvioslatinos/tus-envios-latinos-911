@@ -1,20 +1,20 @@
 const EXCHANGE_RATES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQg6fZQxbXm1c_rKzeZHB69OpzWiBj_cVuQP1Gv0yC5vkjaM2gFCFBw7QZAwh0cfTMf8E2jvsD-ZO99/pub?gid=0&single=true&output=csv';
 
-export type CardCurrency = 'USD' | 'MLC' | 'CUP';
+export type CardCurrency = 'CLASICA' | 'MLC' | 'CUP';
 
 export interface ExchangeRates {
   'United States': {
-    USD: number;
+    CLASICA: number;
     MLC: number;
     CUP: number;
   };
   'Mexico': {
-    USD: number;
+    CLASICA: number;
     MLC: number;
     CUP: number;
   };
   'Europa': {
-    USD: number;
+    CLASICA: number;
     MLC: number;
     CUP: number;
   };
@@ -29,9 +29,9 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
     const lines = csvText.split('\n').filter(line => line.trim());
     
     const rates: ExchangeRates = {
-      'United States': { USD: 0, MLC: 0, CUP: 0 },
-      'Mexico': { USD: 0, MLC: 0, CUP: 0 },
-      'Europa': { USD: 0, MLC: 0, CUP: 0 },
+      'United States': { CLASICA: 0, MLC: 0, CUP: 0 },
+      'Mexico': { CLASICA: 0, MLC: 0, CUP: 0 },
+      'Europa': { CLASICA: 0, MLC: 0, CUP: 0 },
     };
 
     console.log('[ExchangeRates] Total lines:', lines.length);
@@ -44,13 +44,13 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
         const value = parseFloat(columns[2].trim()) || 0;
         console.log(`[ExchangeRates] Line ${i} value in column C:`, value);
         
-        if (i === 0) rates['United States'].USD = value;
+        if (i === 0) rates['United States'].CLASICA = value;
         else if (i === 1) rates['United States'].MLC = value;
         else if (i === 2) rates['United States'].CUP = value;
-        else if (i === 3) rates['Mexico'].USD = value;
+        else if (i === 3) rates['Mexico'].CLASICA = value;
         else if (i === 4) rates['Mexico'].MLC = value;
         else if (i === 5) rates['Mexico'].CUP = value;
-        else if (i === 6) rates['Europa'].USD = value;
+        else if (i === 6) rates['Europa'].CLASICA = value;
         else if (i === 7) rates['Europa'].MLC = value;
         else if (i === 8) rates['Europa'].CUP = value;
       }
@@ -61,9 +61,9 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
   } catch (error) {
     console.error('[ExchangeRates] Error fetching rates:', error);
     return {
-      'United States': { USD: 1.0, MLC: 1.0, CUP: 120 },
-      'Mexico': { USD: 0.95, MLC: 0.95, CUP: 115 },
-      'Europa': { USD: 0.90, MLC: 0.90, CUP: 110 },
+      'United States': { CLASICA: 1.0, MLC: 1.0, CUP: 120 },
+      'Mexico': { CLASICA: 0.95, MLC: 0.95, CUP: 115 },
+      'Europa': { CLASICA: 0.90, MLC: 0.90, CUP: 110 },
     };
   }
 }

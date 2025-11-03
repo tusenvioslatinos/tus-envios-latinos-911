@@ -215,7 +215,7 @@ export default function AddRecipientScreen() {
           <Text style={styles.sectionTitle}>Moneda de la Tarjeta</Text>
           <Text style={styles.sectionSubtitle}>Selecciona la moneda de la tarjeta del destinatario</Text>
           <View style={styles.currencyButtons}>
-            {(['USD', 'MLC', 'CUP'] as CardCurrency[]).map((curr) => (
+            {(['CLASICA', 'MLC', 'CUP'] as CardCurrency[]).map((curr) => (
               <Button
                 key={curr}
                 title={curr}

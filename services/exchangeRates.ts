@@ -23,40 +23,6 @@ export interface ExchangeRates {
   };
 }
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  
-  result.push(current.trim());
-  return result;
-}
-
-function parseDecimalValue(value: string): number {
-  const cleaned = value.replace(/"/g, '').trim();
-  if (!cleaned || cleaned === '') return 0;
-  
-  const parts = cleaned.split(',');
-  if (parts.length === 2) {
-    return parseFloat(parts[0] + '.' + parts[1]) || 0;
-  }
-  
-  return parseFloat(cleaned) || 0;
-}
-
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
   try {
     console.log('[ExchangeRates] Fetching exchange rates from CSV...');
@@ -74,22 +40,19 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
     console.log('[ExchangeRates] Total lines:', lines.length);
     
     for (let i = 0; i < lines.length && i < 9; i++) {
-      const columns = parseCSVLine(lines[i]);
-      console.log(`[ExchangeRates] Line ${i}:`, columns);
+      const line = lines[i];
+      console.log(`[ExchangeRates] Processing line ${i}:`, line);
       
-      if (columns.length >= 3) {
-        let value = 0;
+      const parts = line.split(',');
+      if (parts.length >= 3) {
+        const country = parts[0].replace(/"/g, '').trim();
+        const currencyType = parts[1].replace(/"/g, '').trim();
         
-        if (columns.length === 4 && columns[2] !== '' && columns[3] !== '') {
-          const wholePart = columns[2].replace(/"/g, '').trim();
-          const decimalPart = columns[3].replace(/"/g, '').trim();
-          const fullNumber = wholePart + '.' + decimalPart;
-          value = parseFloat(fullNumber) || 0;
-          console.log(`[ExchangeRates] Line ${i} combined value: ${wholePart}.${decimalPart} = ${value}`);
-        } else {
-          value = parseDecimalValue(columns[2]);
-          console.log(`[ExchangeRates] Line ${i} single value: ${columns[2]} = ${value}`);
-        }
+        let value = 0;
+        const remainingParts = parts.slice(2).join('.').replace(/"/g, '').trim();
+        value = parseFloat(remainingParts) || 0;
+        
+        console.log(`[ExchangeRates] Line ${i}: country=${country}, currency=${currencyType}, value=${value}`);
         
         if (i === 0) rates['United States'].CLASICA = value;
         else if (i === 1) rates['United States'].MLC = value;

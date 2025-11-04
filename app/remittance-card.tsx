@@ -128,6 +128,7 @@ export default function RemittanceCardScreen() {
         senderCountry: userCountry || 'United States',
         details: {
           cardCurrency: selectedCurrency,
+          totalAmount: totalAmount,
         },
       });
 

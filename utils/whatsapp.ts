@@ -113,6 +113,7 @@ function formatRemittanceCardMessage(order: Order): string {
   const currencySymbol = CURRENCY_SYMBOLS[order.currency];
   const cardCurrency = (order.details?.cardCurrency as CardCurrency) || 'MLC';
   const card = order.recipient.cards?.[cardCurrency];
+  const totalAmount = order.details?.totalAmount || order.amount;
   
   let message = `${flag} *RESUMEN DE ENTREGA*\n`;
   message += `📝ID: ${orderId}\n`;
@@ -126,7 +127,7 @@ function formatRemittanceCardMessage(order: Order): string {
   message += `👤 Recibe: ${order.recipient.name}\n`;
   message += `📱 Contacto: ${order.recipient.phone}\n`;
   message += `👨‍⚕️ Envía: ${order.senderName}\n`;
-  message += `💰 Monto a pagar: ${currencySymbol}${order.amount.toFixed(2)} ${order.currency}`;
+  message += `💰 Monto a pagar: ${currencySymbol}${totalAmount.toFixed(2)} ${order.currency}`;
   
   return message;
 }

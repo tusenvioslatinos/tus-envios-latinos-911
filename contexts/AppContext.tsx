@@ -116,7 +116,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
     const newOrder: Order = {
       ...order,
       id: generateOrderId(),
-      status: 'pending',
+      status: 'completed',
       createdAt: new Date().toISOString(),
     };
     const updated = [newOrder, ...orders];

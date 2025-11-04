@@ -1,15 +1,17 @@
 import { View, Text, StyleSheet, FlatList, Pressable, Platform, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Plus, User, Phone, MapPin, Trash2, CreditCard, Edit } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp, useFilteredRecipients } from '@/contexts/AppContext';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 import { Recipient } from '@/types';
 
 export default function RecipientsScreen() {
   const router = useRouter();
-  const { deleteRecipient } = useApp();
+  const { deleteRecipient, theme } = useApp();
+  const Colors = getColors(theme);
+  const styles = useMemo(() => createStyles(Colors), [Colors]);
   const [searchQuery, setSearchQuery] = useState('');
   const recipients = useFilteredRecipients(searchQuery);
 
@@ -197,7 +199,7 @@ export default function RecipientsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ReturnType<typeof getColors>) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

@@ -1,9 +1,9 @@
 import { View, StyleSheet, ScrollView, Alert, Text, ActivityIndicator, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { X } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
 import RecipientSelector from '@/components/RecipientSelector';
@@ -16,7 +16,9 @@ import { fetchExchangeRates, getExchangeRate } from '@/services/exchangeRates';
 
 export default function RemittanceCardScreen() {
   const router = useRouter();
-  const { currency, userCountry, addOrder, updateRecipient } = useApp();
+  const { currency, userCountry, addOrder, updateRecipient, theme } = useApp();
+  const Colors = getColors(theme);
+  const styles = useMemo(() => createStyles(Colors), [Colors]);
   const [loading, setLoading] = useState(false);
   
   const [recipient, setRecipient] = useState<Recipient | null>(null);
@@ -287,7 +289,7 @@ export default function RemittanceCardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ReturnType<typeof getColors>) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

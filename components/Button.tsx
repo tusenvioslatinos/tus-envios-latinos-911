@@ -1,6 +1,8 @@
 import { Pressable, Text, StyleSheet, ActivityIndicator, Platform } from 'react-native';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
+import { useApp } from '@/contexts/AppContext';
 import * as Haptics from 'expo-haptics';
+import { useMemo } from 'react';
 
 interface ButtonProps {
   title: string;
@@ -11,6 +13,10 @@ interface ButtonProps {
 }
 
 export default function Button({ title, onPress, variant = 'primary', disabled, loading }: ButtonProps) {
+  const { theme } = useApp();
+  const Colors = getColors(theme);
+  const styles = useMemo(() => createStyles(Colors), [Colors]);
+  
   const handlePress = () => {
     if (!disabled && !loading) {
       if (Platform.OS !== 'web') {
@@ -51,7 +57,7 @@ export default function Button({ title, onPress, variant = 'primary', disabled, 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ReturnType<typeof getColors>) => StyleSheet.create({
   button: {
     paddingVertical: 16,
     paddingHorizontal: 24,

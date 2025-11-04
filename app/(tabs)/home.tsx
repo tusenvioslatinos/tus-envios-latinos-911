@@ -3,11 +3,11 @@ import { Stack, useRouter } from 'expo-router';
 import { DollarSign, ShoppingBag, Smartphone, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '@/contexts/AppContext';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
 import { openSupportWhatsApp } from '@/utils/whatsapp';
 
 import * as Haptics from 'expo-haptics';
-import React from "react";
+import React, { useMemo } from "react";
 
 interface ServiceCardProps {
   title: string;
@@ -18,6 +18,8 @@ interface ServiceCardProps {
 }
 
 function ServiceCard({ title, description, icon, gradient, onPress }: ServiceCardProps) {
+  const styles = useMemo(() => createStyles(), []);
+  
   return (
     <Pressable
       onPress={onPress}
@@ -51,7 +53,9 @@ function ServiceCard({ title, description, icon, gradient, onPress }: ServiceCar
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { currency, userCountry } = useApp();
+  const { currency, userCountry, theme } = useApp();
+  const Colors = getColors(theme);
+  const styles = useMemo(() => createStyles(Colors), [Colors]);
 
   const handleNavigation = (path: string) => {
     if (Platform.OS !== 'web') {
@@ -63,13 +67,13 @@ export default function HomeScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Servicios' }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={[styles.container, { backgroundColor: Colors.background }]} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeText}>Pagarás desde</Text>
-            <Text style={styles.countryText}>{userCountry}</Text>
+            <Text style={[styles.welcomeText, { color: Colors.textSecondary }]}>Pagarás desde</Text>
+            <Text style={[styles.countryText, { color: Colors.text }]}>{userCountry}</Text>
           </View>
-          <View style={styles.currencyBadge}>
+          <View style={[styles.currencyBadge, { backgroundColor: Colors.primary }]}>
             <Text style={styles.currencyText}>{currency}</Text>
           </View>
         </View>
@@ -83,7 +87,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.servicesContainer}>
-          <Text style={styles.sectionTitle}>Nuestros Servicios</Text>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Nuestros Servicios</Text>
           
           <ServiceCard
             title="Envío en Efectivo"
@@ -118,13 +122,13 @@ export default function HomeScreen() {
           />
         </View>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>¿Necesitas ayuda?</Text>
-          <Text style={styles.infoText}>
+        <View style={[styles.infoCard, { backgroundColor: Colors.surfaceAlt }]}>
+          <Text style={[styles.infoTitle, { color: Colors.text }]}>¿Necesitas ayuda?</Text>
+          <Text style={[styles.infoText, { color: Colors.textSecondary }]}>
             Nuestro equipo está disponible para asistirte en todo momento
           </Text>
           <Pressable
-            style={styles.infoButton}
+            style={[styles.infoButton, { backgroundColor: Colors.primary }]}
             onPress={async () => {
               if (Platform.OS !== 'web') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -140,10 +144,9 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors?: ReturnType<typeof getColors>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: 20,
@@ -160,16 +163,13 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 16,
-    color: Colors.textSecondary,
     marginBottom: 4,
   },
   countryText: {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: Colors.text,
   },
   currencyBadge: {
-    backgroundColor: Colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold' as const,
-    color: Colors.text,
     marginBottom: 16,
   },
   serviceCard: {
@@ -245,7 +244,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   infoCard: {
-    backgroundColor: Colors.surfaceAlt,
     padding: 24,
     borderRadius: 20,
     alignItems: 'center',
@@ -253,18 +251,15 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 18,
     fontWeight: 'bold' as const,
-    color: Colors.text,
     marginBottom: 8,
   },
   infoText: {
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
   },
   infoButton: {
-    backgroundColor: Colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

@@ -1,5 +1,7 @@
 import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
+import { useApp } from '@/contexts/AppContext';
+import { useMemo } from 'react';
 
 interface FormInputProps extends TextInputProps {
   label: string;
@@ -8,6 +10,10 @@ interface FormInputProps extends TextInputProps {
 }
 
 export default function FormInput({ label, error, required, ...props }: FormInputProps) {
+  const { theme } = useApp();
+  const Colors = getColors(theme);
+  const styles = useMemo(() => createStyles(Colors), [Colors]);
+  
   return (
     <View style={styles.container}>
       <Text style={styles.label}>
@@ -24,7 +30,7 @@ export default function FormInput({ label, error, required, ...props }: FormInpu
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ReturnType<typeof getColors>) => StyleSheet.create({
   container: {
     marginBottom: 20,
   },

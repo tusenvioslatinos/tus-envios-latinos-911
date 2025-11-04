@@ -1,9 +1,9 @@
 import { View, Text, Pressable, StyleSheet, FlatList, Modal } from 'react-native';
 import { User, Plus, CreditCard, AlertTriangle } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Recipient, CardCurrency } from '@/types';
 import { useApp } from '@/contexts/AppContext';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
 import { useRouter } from 'expo-router';
 
 interface RecipientSelectorProps {
@@ -16,7 +16,9 @@ interface RecipientSelectorProps {
 
 export default function RecipientSelector({ value, onChange, label, cardCurrency, onAddCardRequest }: RecipientSelectorProps) {
   const router = useRouter();
-  const { recipients } = useApp();
+  const { recipients, theme } = useApp();
+  const Colors = getColors(theme);
+  const styles = useMemo(() => createStyles(Colors), [Colors]);
   const [showModal, setShowModal] = useState(false);
   const [showMissingCardModal, setShowMissingCardModal] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
@@ -191,7 +193,7 @@ export default function RecipientSelector({ value, onChange, label, cardCurrency
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: ReturnType<typeof getColors>) => StyleSheet.create({
   container: {
     marginBottom: 20,
   },

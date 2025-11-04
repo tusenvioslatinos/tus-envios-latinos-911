@@ -146,6 +146,13 @@ export default function RecipientsScreen() {
             contentContainerStyle={styles.listContent}
           />
         )}
+        
+        <Pressable
+          onPress={handleAddRecipient}
+          style={styles.fab}
+        >
+          <Plus color="#FFFFFF" size={28} strokeWidth={2.5} />
+        </Pressable>
       </View>
     </>
   );
@@ -268,5 +275,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#FFFFFF',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
 });

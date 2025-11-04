@@ -66,7 +66,7 @@ export default function HomeScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeText}>Bienvenido</Text>
+            <Text style={styles.welcomeText}>Pagarás desde</Text>
             <Text style={styles.countryText}>{userCountry}</Text>
           </View>
           <View style={styles.currencyBadge}>

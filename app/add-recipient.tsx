@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
+import { formatCardNumber } from '@/utils/cardFormatter';
 import FormInput from '@/components/FormInput';
 import Button from '@/components/Button';
 
@@ -229,10 +230,11 @@ export default function AddRecipientScreen() {
           <Text style={styles.cardSectionTitle}>Tarjeta CLASICA (USD)</Text>
           <FormInput
             label="Número de Tarjeta"
-            placeholder="9225 XXXX XXXX XXXX"
+            placeholder="XXXX-XXXX-XXXX-XXXX"
             value={formData.clasicaNumber}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, clasicaNumber: text }))}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, clasicaNumber: formatCardNumber(text) }))}
             keyboardType="numeric"
+            maxLength={19}
           />
           <FormInput
             label="Tipo de Tarjeta (opcional)"
@@ -246,10 +248,11 @@ export default function AddRecipientScreen() {
           <Text style={styles.cardSectionTitle}>Tarjeta MLC</Text>
           <FormInput
             label="Número de Tarjeta"
-            placeholder="9225 XXXX XXXX XXXX"
+            placeholder="XXXX-XXXX-XXXX-XXXX"
             value={formData.mlcNumber}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, mlcNumber: text }))}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, mlcNumber: formatCardNumber(text) }))}
             keyboardType="numeric"
+            maxLength={19}
           />
           <FormInput
             label="Tipo de Tarjeta (opcional)"
@@ -263,10 +266,11 @@ export default function AddRecipientScreen() {
           <Text style={styles.cardSectionTitle}>Tarjeta CUP</Text>
           <FormInput
             label="Número de Tarjeta"
-            placeholder="9225 XXXX XXXX XXXX"
+            placeholder="XXXX-XXXX-XXXX-XXXX"
             value={formData.cupNumber}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, cupNumber: text }))}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, cupNumber: formatCardNumber(text) }))}
             keyboardType="numeric"
+            maxLength={19}
           />
           <FormInput
             label="Tipo de Tarjeta (opcional)"

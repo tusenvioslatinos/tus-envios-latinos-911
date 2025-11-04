@@ -9,6 +9,7 @@ import Button from '@/components/Button';
 import RecipientSelector from '@/components/RecipientSelector';
 import { Recipient, CardCurrency } from '@/types';
 import { sendOrderViaWhatsApp } from '@/utils/whatsapp';
+import { formatCardNumber } from '@/utils/cardFormatter';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 import { useQuery } from '@tanstack/react-query';
 import { fetchExchangeRates, getExchangeRate } from '@/services/exchangeRates';
@@ -269,10 +270,11 @@ export default function RemittanceCardScreen() {
 
             <FormInput
               label={`Número de Tarjeta ${selectedCurrency}`}
-              placeholder="9225 XXXX XXXX XXXX"
+              placeholder="XXXX-XXXX-XXXX-XXXX"
               value={cardNumber}
-              onChangeText={setCardNumber}
+              onChangeText={(text) => setCardNumber(formatCardNumber(text))}
               keyboardType="numeric"
+              maxLength={19}
               required
             />
 

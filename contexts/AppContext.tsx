@@ -2,6 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Currency, Recipient, Order, ThemeMode } from '@/types';
+import { trpcClient } from '@/lib/trpc';
 
 const STORAGE_KEYS = {
   RECIPIENTS: '@recipients',
@@ -113,16 +114,52 @@ export const [AppProvider, useApp] = createContextHook(() => {
   };
 
   const addOrder = useCallback(async (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
-    const newOrder: Order = {
-      ...order,
-      id: generateOrderId(),
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [newOrder, ...orders];
-    setOrders(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
-    return newOrder;
+    console.log('[AppContext] Creating order:', order.type);
+    
+    try {
+      const createdOrder = await trpcClient.orders.create.mutate({
+        type: order.type,
+        recipientData: JSON.stringify(order.recipient),
+        amount: order.amount,
+        currency: order.currency,
+        senderName: order.senderName,
+        senderPhone: order.senderPhone,
+        senderEmail: order.senderEmail,
+        senderCountry: order.senderCountry,
+        details: order.details ? JSON.stringify(order.details) : undefined,
+      });
+
+      console.log('[AppContext] Order created on backend:', createdOrder.id);
+
+      const newOrder: Order = {
+        ...order,
+        id: createdOrder.id,
+        status: createdOrder.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+        createdAt: createdOrder.createdAt,
+      };
+
+      const updated = [newOrder, ...orders];
+      setOrders(updated);
+      await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      
+      console.log('[AppContext] Order saved locally');
+      return newOrder;
+    } catch (error) {
+      console.error('[AppContext] Error creating order:', error);
+      
+      const fallbackOrder: Order = {
+        ...order,
+        id: generateOrderId(),
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [fallbackOrder, ...orders];
+      setOrders(updated);
+      await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      
+      console.log('[AppContext] Order saved locally (fallback)');
+      return fallbackOrder;
+    }
   }, [orders]);
 
   const updateCurrency = useCallback(async (newCurrency: Currency) => {

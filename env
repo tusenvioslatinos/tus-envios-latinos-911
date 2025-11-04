@@ -1,0 +1,7 @@
+# Base URL for the backend API
+# When running locally, use your computer's local IP address
+# Find it with: ipconfig (Windows) or ifconfig (Mac/Linux)
+EXPO_PUBLIC_RORK_API_BASE_URL=http://localhost:3000
+
+# Example for testing on physical device:
+# EXPO_PUBLIC_RORK_API_BASE_URL=http://192.168.1.100:3000

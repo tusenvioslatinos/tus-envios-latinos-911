@@ -4,7 +4,7 @@ import { CURRENCY_SYMBOLS } from '@/constants/data';
 
 const WHATSAPP_NUMBER = '14023131333';
 
-export async function sendOrderViaWhatsApp(order: Omit<Order, 'id' | 'createdAt' | 'status'>) {
+export async function sendOrderViaWhatsApp(order: Order) {
   const message = formatOrderMessage(order);
   const url = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
   
@@ -19,15 +19,6 @@ export async function sendOrderViaWhatsApp(order: Omit<Order, 'id' | 'createdAt'
   }
 }
 
-function generateRandomId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let id = 'TEL';
-  for (let i = 0; i < 6; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return id;
-}
-
 function getCountryFlag(country: string): string {
   const normalizedCountry = country.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   
@@ -40,9 +31,9 @@ function getCountryFlag(country: string): string {
   }
 }
 
-function formatFoodComboMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+function formatFoodComboMessage(order: Order): string {
   const flag = getCountryFlag(order.senderCountry);
-  const orderId = generateRandomId();
+  const orderId = order.id;
   const currencySymbol = CURRENCY_SYMBOLS[order.currency];
   
   let message = `${flag} *RESUMEN DE ENTREGA*\n`;
@@ -57,9 +48,9 @@ function formatFoodComboMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'
   return message;
 }
 
-function formatMobileRechargeMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+function formatMobileRechargeMessage(order: Order): string {
   const flag = getCountryFlag(order.senderCountry);
-  const orderId = generateRandomId();
+  const orderId = order.id;
   const currencySymbol = CURRENCY_SYMBOLS[order.currency];
   
   let message = `${flag} *RESUMEN DE ENTREGA*\n`;
@@ -83,9 +74,9 @@ function formatMobileRechargeMessage(order: Omit<Order, 'id' | 'createdAt' | 'st
   return message;
 }
 
-function formatRemittanceCashMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+function formatRemittanceCashMessage(order: Order): string {
   const flag = getCountryFlag(order.senderCountry);
-  const orderId = generateRandomId();
+  const orderId = order.id;
   const currencySymbol = CURRENCY_SYMBOLS[order.currency];
   const receiveCurrency = (order.details?.receiveCurrency as string) || 'USD';
   
@@ -116,9 +107,9 @@ function formatRemittanceCashMessage(order: Omit<Order, 'id' | 'createdAt' | 'st
   return message;
 }
 
-function formatRemittanceCardMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+function formatRemittanceCardMessage(order: Order): string {
   const flag = getCountryFlag(order.senderCountry);
-  const orderId = generateRandomId();
+  const orderId = order.id;
   const currencySymbol = CURRENCY_SYMBOLS[order.currency];
   const cardCurrency = (order.details?.cardCurrency as CardCurrency) || 'MLC';
   const card = order.recipient.cards?.[cardCurrency];
@@ -140,7 +131,7 @@ function formatRemittanceCardMessage(order: Omit<Order, 'id' | 'createdAt' | 'st
   return message;
 }
 
-function formatOrderMessage(order: Omit<Order, 'id' | 'createdAt' | 'status'>): string {
+function formatOrderMessage(order: Order): string {
   if (order.type === 'food-combo') {
     return formatFoodComboMessage(order);
   }

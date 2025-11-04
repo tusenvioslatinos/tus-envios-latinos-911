@@ -22,7 +22,7 @@ export async function sendOrderViaWhatsApp(order: Omit<Order, 'id' | 'createdAt'
 function generateRandomId(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let id = 'TEL';
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 6; i++) {
     id += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return id;

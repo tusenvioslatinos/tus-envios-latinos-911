@@ -44,12 +44,15 @@ export const db = {
   orders: {
     async create(order: OrderDB): Promise<OrderDB> {
       orders.unshift(order);
+      console.log('[DB] Order saved. Total orders in DB:', orders.length);
+      console.log('[DB] Order details:', { id: order.id, type: order.type, status: order.status });
       return order;
     },
     async findById(id: string): Promise<OrderDB | undefined> {
       return orders.find(o => o.id === id);
     },
     async getAll(): Promise<OrderDB[]> {
+      console.log('[DB] Returning all orders. Count:', orders.length);
       return orders;
     },
     async update(id: string, updates: Partial<OrderDB>): Promise<OrderDB | null> {

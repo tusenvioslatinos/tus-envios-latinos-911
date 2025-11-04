@@ -236,12 +236,6 @@ export default function AddRecipientScreen() {
             keyboardType="numeric"
             maxLength={19}
           />
-          <FormInput
-            label="Tipo de Tarjeta (opcional)"
-            placeholder="Débito, Crédito, etc."
-            value={formData.clasicaType}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, clasicaType: text }))}
-          />
         </View>
 
         <View style={styles.cardSection}>
@@ -254,12 +248,6 @@ export default function AddRecipientScreen() {
             keyboardType="numeric"
             maxLength={19}
           />
-          <FormInput
-            label="Tipo de Tarjeta (opcional)"
-            placeholder="Débito, Crédito, etc."
-            value={formData.mlcType}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, mlcType: text }))}
-          />
         </View>
 
         <View style={styles.cardSection}>
@@ -271,12 +259,6 @@ export default function AddRecipientScreen() {
             onChangeText={(text) => setFormData(prev => ({ ...prev, cupNumber: formatCardNumber(text) }))}
             keyboardType="numeric"
             maxLength={19}
-          />
-          <FormInput
-            label="Tipo de Tarjeta (opcional)"
-            placeholder="Débito, Crédito, etc."
-            value={formData.cupType}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, cupType: text }))}
           />
         </View>
 

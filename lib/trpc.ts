@@ -10,9 +10,7 @@ const getBaseUrl = () => {
     return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
   }
 
-  throw new Error(
-    "No base url found, please set EXPO_PUBLIC_RORK_API_BASE_URL"
-  );
+  return "https://34z6c325dcpuojgjmfr7a.rork.run";
 };
 
 export const trpcClient = trpc.createClient({

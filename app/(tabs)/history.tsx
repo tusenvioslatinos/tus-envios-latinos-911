@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, FlatList, Pressable, Alert, Platform } from 'react-native';
 import { Stack } from 'expo-router';
-import { Package, Clock, Trash2 } from 'lucide-react-native';
+import { Package, Clock, Trash2, Hash } from 'lucide-react-native';
 import { useRecentOrders, useApp } from '@/contexts/AppContext';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
 import { CURRENCY_SYMBOLS } from '@/constants/data';
 import { Order } from '@/types';
 
@@ -16,7 +16,8 @@ const SERVICE_NAMES: Record<string, string> = {
 
 export default function HistoryScreen() {
   const orders = useRecentOrders(50);
-  const { deleteOrder } = useApp();
+  const { deleteOrder, theme } = useApp();
+  const Colors = getColors(theme);
 
   const handleDelete = async (id: string, recipientName: string) => {
     Alert.alert(
@@ -52,17 +53,17 @@ export default function HistoryScreen() {
     });
 
     return (
-      <View style={styles.orderCard}>
+      <View style={[styles.orderCard, { backgroundColor: Colors.surface }]}>
         <View style={styles.orderHeader}>
-          <View style={styles.iconContainer}>
+          <View style={[styles.iconContainer, { backgroundColor: Colors.primaryLight + '20' }]}>
             <Package color={Colors.primary} size={20} />
           </View>
           <View style={styles.orderInfo}>
-            <Text style={styles.serviceName}>{serviceName}</Text>
-            <Text style={styles.recipientName}>{item.recipient.name}</Text>
+            <Text style={[styles.serviceName, { color: Colors.text }]}>{serviceName}</Text>
+            <Text style={[styles.recipientName, { color: Colors.textSecondary }]}>{item.recipient.name}</Text>
           </View>
           <View style={styles.orderAmount}>
-            <Text style={styles.amountText}>
+            <Text style={[styles.amountText, { color: Colors.primary }]}>
               {currencySymbol}{item.amount.toFixed(2)}
             </Text>
           </View>
@@ -76,13 +77,19 @@ export default function HistoryScreen() {
             <Trash2 color={Colors.error} size={18} />
           </Pressable>
         </View>
+        <View style={styles.orderMiddle}>
+          <View style={styles.idContainer}>
+            <Hash color={Colors.textLight} size={14} />
+            <Text style={[styles.idText, { color: Colors.textSecondary }]}>{item.id}</Text>
+          </View>
+        </View>
         <View style={styles.orderFooter}>
           <View style={styles.dateContainer}>
             <Clock color={Colors.textLight} size={14} />
-            <Text style={styles.dateText}>{dateStr}</Text>
+            <Text style={[styles.dateText, { color: Colors.textLight }]}>{dateStr}</Text>
           </View>
-          <View style={[styles.statusBadge, getStatusStyle(item.status)]}>
-            <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
+          <View style={[styles.statusBadge, getStatusStyle(item.status, Colors)]}>
+            <Text style={[styles.statusText, { color: Colors.text }]}>{getStatusText(item.status)}</Text>
           </View>
         </View>
       </View>
@@ -92,12 +99,12 @@ export default function HistoryScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Historial de Envíos' }} />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: Colors.background }]}>
         {orders.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Package color={Colors.textLight} size={64} />
-            <Text style={styles.emptyTitle}>Sin envíos aún</Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyTitle, { color: Colors.text }]}>Sin envíos aún</Text>
+            <Text style={[styles.emptyText, { color: Colors.textSecondary }]}>
               Tus envíos realizados aparecerán aquí
             </Text>
           </View>
@@ -114,7 +121,7 @@ export default function HistoryScreen() {
   );
 }
 
-function getStatusStyle(status: string) {
+function getStatusStyle(status: string, Colors: any) {
   switch (status) {
     case 'completed':
       return { backgroundColor: Colors.success + '20' };
@@ -143,13 +150,11 @@ function getStatusText(status: string) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   listContent: {
     padding: 16,
   },
   orderCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -168,7 +173,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.primaryLight + '20',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -179,12 +183,10 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
     marginBottom: 2,
   },
   recipientName: {
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   orderAmount: {
     alignItems: 'flex-end',
@@ -199,7 +201,18 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 18,
     fontWeight: 'bold' as const,
-    color: Colors.primary,
+  },
+  orderMiddle: {
+    marginBottom: 8,
+  },
+  idContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  idText: {
+    fontSize: 12,
+    fontWeight: '500' as const,
   },
   orderFooter: {
     flexDirection: 'row',
@@ -213,7 +226,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 13,
-    color: Colors.textLight,
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -223,7 +235,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   emptyContainer: {
     flex: 1,
@@ -234,13 +245,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold' as const,
-    color: Colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: 'center',
   },
 });

@@ -1,16 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Switch } from 'react-native';
 import { Stack } from 'expo-router';
-import { Globe, ChevronRight } from 'lucide-react-native';
+import { Globe, ChevronRight, Sun, Moon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
-import Colors from '@/constants/colors';
+import { getColors } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCountries } from '@/services/countries';
 
 export default function SettingsScreen() {
-  const { userCountry, updateUserCountry } = useApp();
+  const { userCountry, updateUserCountry, theme, updateTheme } = useApp();
   const [showCountries, setShowCountries] = useState(false);
+  const Colors = getColors(theme);
 
   const { data: countries, isLoading: countriesLoading } = useQuery<string[]>({
     queryKey: ['countries'],
@@ -25,37 +26,73 @@ export default function SettingsScreen() {
     setShowCountries(false);
   };
 
+  const handleThemeToggle = async (value: boolean) => {
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    await updateTheme(value ? 'dark' : 'light');
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: 'Ajustes' }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={[styles.container, { backgroundColor: Colors.background }]} contentContainerStyle={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tu Ubicación</Text>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Apariencia</Text>
+          
+          <View style={[styles.settingItem, { backgroundColor: Colors.surface }]}>
+            <View style={styles.settingLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: Colors.primaryLight + '20' }]}>
+                {theme === 'dark' ? (
+                  <Moon color={Colors.primary} size={20} />
+                ) : (
+                  <Sun color={Colors.primary} size={20} />
+                )}
+              </View>
+              <View>
+                <Text style={[styles.settingLabel, { color: Colors.textSecondary }]}>Tema Oscuro</Text>
+                <Text style={[styles.settingValue, { color: Colors.text }]}>
+                  {theme === 'dark' ? 'Activado' : 'Desactivado'}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={theme === 'dark'}
+              onValueChange={handleThemeToggle}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.surface}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Tu Ubicación</Text>
           
           <Pressable
             onPress={() => setShowCountries(!showCountries)}
             style={({ pressed }) => [
               styles.settingItem,
+              { backgroundColor: Colors.surface },
               pressed && styles.settingItemPressed,
             ]}
           >
             <View style={styles.settingLeft}>
-              <View style={styles.iconContainer}>
+              <View style={[styles.iconContainer, { backgroundColor: Colors.primaryLight + '20' }]}>
                 <Globe color={Colors.primary} size={20} />
               </View>
               <View>
-                <Text style={styles.settingLabel}>País</Text>
-                <Text style={styles.settingValue}>{userCountry}</Text>
+                <Text style={[styles.settingLabel, { color: Colors.textSecondary }]}>País</Text>
+                <Text style={[styles.settingValue, { color: Colors.text }]}>{userCountry}</Text>
               </View>
             </View>
             <ChevronRight color={Colors.textLight} size={20} />
           </Pressable>
 
           {showCountries && (
-            <View style={styles.countriesContainer}>
+            <View style={[styles.countriesContainer, { backgroundColor: Colors.surface, borderColor: Colors.border }]}>
               {countriesLoading ? (
                 <View style={styles.loadingContainer}>
-                  <Text style={styles.loadingText}>Cargando países...</Text>
+                  <Text style={[styles.loadingText, { color: Colors.textSecondary }]}>Cargando países...</Text>
                 </View>
               ) : (
                 countries?.map((country) => (
@@ -64,11 +101,12 @@ export default function SettingsScreen() {
                     onPress={() => handleCountrySelect(country)}
                     style={({ pressed }) => [
                       styles.countryItem,
-                      userCountry === country && styles.countryItemSelected,
+                      { borderBottomColor: Colors.border },
+                      userCountry === country && { backgroundColor: Colors.primaryLight + '10' },
                       pressed && styles.countryItemPressed,
                     ]}
                   >
-                    <Text style={styles.countryName}>{country}</Text>
+                    <Text style={[styles.countryName, { color: Colors.text }]}>{country}</Text>
                   </Pressable>
                 ))
               )}
@@ -77,22 +115,22 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Acerca de</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>Tus Envíos Latinos</Text>
-            <Text style={styles.infoText}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Acerca de</Text>
+          <View style={[styles.infoCard, { backgroundColor: Colors.surface }]}>
+            <Text style={[styles.infoTitle, { color: Colors.text }]}>Tus Envíos Latinos</Text>
+            <Text style={[styles.infoText, { color: Colors.textSecondary }]}>
               Con más de 6 años de experiencia enviando remesas, combos de comida y recargas a Cuba.
             </Text>
-            <Text style={styles.versionText}>Versión 1.0.0</Text>
+            <Text style={[styles.versionText, { color: Colors.textLight }]}>Versión 1.0.0</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Soporte</Text>
-          <Text style={styles.supportText}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Soporte</Text>
+          <Text style={[styles.supportText, { color: Colors.textSecondary }]}>
             Para cualquier consulta, envía tu pedido por WhatsApp y recibirás instrucciones de pago.
           </Text>
-          <Text style={styles.phoneText}>+1 (402) 313-1333</Text>
+          <Text style={[styles.phoneText, { color: Colors.primary }]}>+1 (402) 313-1333</Text>
         </View>
       </ScrollView>
     </>
@@ -102,7 +140,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: 20,
@@ -114,11 +151,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold' as const,
-    color: Colors.text,
     marginBottom: 12,
   },
   settingItem: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -142,23 +177,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.primaryLight + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   settingLabel: {
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: 2,
   },
   settingValue: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   countriesContainer: {
     marginTop: 12,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -173,10 +204,6 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  countryItemSelected: {
-    backgroundColor: Colors.primaryLight + '10',
   },
   countryItemPressed: {
     opacity: 0.7,
@@ -184,7 +211,6 @@ const styles = StyleSheet.create({
   countryName: {
     flex: 1,
     fontSize: 16,
-    color: Colors.text,
   },
   loadingContainer: {
     padding: 16,
@@ -192,10 +218,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   infoCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
@@ -207,28 +231,23 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 18,
     fontWeight: 'bold' as const,
-    color: Colors.text,
     marginBottom: 8,
   },
   infoText: {
     fontSize: 14,
-    color: Colors.textSecondary,
     lineHeight: 20,
     marginBottom: 12,
   },
   versionText: {
     fontSize: 12,
-    color: Colors.textLight,
   },
   supportText: {
     fontSize: 14,
-    color: Colors.textSecondary,
     lineHeight: 20,
     marginBottom: 12,
   },
   phoneText: {
     fontSize: 18,
     fontWeight: 'bold' as const,
-    color: Colors.primary,
   },
 });

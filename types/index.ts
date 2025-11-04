@@ -1,5 +1,7 @@
 export type Currency = 'USD' | 'MXN' | 'EUR';
 
+export type ThemeMode = 'light' | 'dark';
+
 export type CardCurrency = 'CLASICA' | 'MLC' | 'CUP' | 'USD';
 
 export type ServiceType = 'remittance-cash' | 'remittance-card' | 'food-combo' | 'mobile-recharge';

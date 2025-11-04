@@ -1,13 +1,14 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Currency, Recipient, Order } from '@/types';
+import { Currency, Recipient, Order, ThemeMode } from '@/types';
 
 const STORAGE_KEYS = {
   RECIPIENTS: '@recipients',
   ORDERS: '@orders',
   CURRENCY: '@currency',
   USER_COUNTRY: '@user_country',
+  THEME: '@theme',
 };
 
 export const [AppProvider, useApp] = createContextHook(() => {
@@ -15,6 +16,7 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [currency, setCurrency] = useState<Currency>('USD');
   const [userCountry, setUserCountry] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ThemeMode>('light');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -24,11 +26,12 @@ export const [AppProvider, useApp] = createContextHook(() => {
   const loadData = async () => {
     try {
       console.log('[AppContext] Loading data from AsyncStorage...');
-      const [storedRecipients, storedOrders, storedCurrency, storedCountry] = await Promise.all([
+      const [storedRecipients, storedOrders, storedCurrency, storedCountry, storedTheme] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.RECIPIENTS),
         AsyncStorage.getItem(STORAGE_KEYS.ORDERS),
         AsyncStorage.getItem(STORAGE_KEYS.CURRENCY),
         AsyncStorage.getItem(STORAGE_KEYS.USER_COUNTRY),
+        AsyncStorage.getItem(STORAGE_KEYS.THEME),
       ]);
 
       if (storedRecipients) {
@@ -56,6 +59,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
         console.log('[AppContext] Country loaded:', storedCountry);
       } else {
         console.log('[AppContext] No country stored, needs selection');
+      }
+      if (storedTheme) {
+        setTheme(storedTheme as ThemeMode);
+        console.log('[AppContext] Theme loaded:', storedTheme);
       }
       console.log('[AppContext] Data loaded successfully');
     } catch (error) {
@@ -96,10 +103,19 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
   }, [orders]);
 
+  const generateOrderId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let id = 'TEL';
+    for (let i = 0; i < 6; i++) {
+      id += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return id;
+  };
+
   const addOrder = useCallback(async (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
     const newOrder: Order = {
       ...order,
-      id: Date.now().toString(),
+      id: generateOrderId(),
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
@@ -134,11 +150,18 @@ export const [AppProvider, useApp] = createContextHook(() => {
     await updateCurrency(newCurrency);
   }, [updateCurrency]);
 
+  const updateTheme = useCallback(async (newTheme: ThemeMode) => {
+    setTheme(newTheme);
+    await AsyncStorage.setItem(STORAGE_KEYS.THEME, newTheme);
+    console.log('[AppContext] Theme updated:', newTheme);
+  }, []);
+
   return useMemo(() => ({
     recipients,
     orders,
     currency,
     userCountry,
+    theme,
     isLoading,
     hasSelectedCountry: userCountry !== null,
     addRecipient,
@@ -148,7 +171,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
     deleteOrder,
     updateCurrency,
     updateUserCountry,
-  }), [recipients, orders, currency, userCountry, isLoading, addRecipient, updateRecipient, deleteRecipient, addOrder, deleteOrder, updateCurrency, updateUserCountry]);
+    updateTheme,
+  }), [recipients, orders, currency, userCountry, theme, isLoading, addRecipient, updateRecipient, deleteRecipient, addOrder, deleteOrder, updateCurrency, updateUserCountry, updateTheme]);
 });
 
 export const useFilteredRecipients = (searchQuery: string) => {

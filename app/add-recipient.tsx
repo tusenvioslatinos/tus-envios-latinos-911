@@ -156,7 +156,7 @@ export default function AddRecipientScreen() {
               </Pressable>
 
               {showProvinces && locationData && (
-                <View style={styles.dropdown}>
+                <ScrollView style={styles.dropdown} nestedScrollEnabled>
                   {locationData.provinces.map((province) => (
                     <Pressable
                       key={province}
@@ -173,7 +173,7 @@ export default function AddRecipientScreen() {
                       <Text style={styles.dropdownText}>{province}</Text>
                     </Pressable>
                   ))}
-                </View>
+                </ScrollView>
               )}
 
               {formData.province && (
@@ -195,7 +195,7 @@ export default function AddRecipientScreen() {
                   </Pressable>
 
                   {showMunicipalities && locationData && locationData.municipalities[formData.province] && (
-                    <View style={styles.dropdown}>
+                    <ScrollView style={styles.dropdown} nestedScrollEnabled>
                       {locationData.municipalities[formData.province].map((municipality) => (
                         <Pressable
                           key={municipality}
@@ -212,7 +212,7 @@ export default function AddRecipientScreen() {
                           <Text style={styles.dropdownText}>{municipality}</Text>
                         </Pressable>
                       ))}
-                    </View>
+                    </ScrollView>
                   )}
                 </>
               )}

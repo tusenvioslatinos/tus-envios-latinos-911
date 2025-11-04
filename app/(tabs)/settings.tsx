@@ -1,8 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Switch } from 'react-native';
 import { Stack } from 'expo-router';
-import { Globe, ChevronRight, Sun, Moon, Bell } from 'lucide-react-native';
+import { Globe, ChevronRight, Sun, Moon } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
-import { useNotifications } from '@/contexts/NotificationContext';
 import { getColors } from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
@@ -11,7 +10,6 @@ import { fetchCountries } from '@/services/countries';
 
 export default function SettingsScreen() {
   const { userCountry, updateUserCountry, theme, updateTheme } = useApp();
-  const { notificationsEnabled, toggleNotifications, expoPushToken } = useNotifications();
   const [showCountries, setShowCountries] = useState(false);
   const Colors = getColors(theme);
 
@@ -33,13 +31,6 @@ export default function SettingsScreen() {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     await updateTheme(value ? 'dark' : 'light');
-  };
-
-  const handleNotificationsToggle = async (value: boolean) => {
-    if (Platform.OS !== 'web') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    await toggleNotifications(value);
   };
 
   return (
@@ -72,36 +63,6 @@ export default function SettingsScreen() {
               thumbColor={Colors.surface}
             />
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Notificaciones</Text>
-          
-          <View style={[styles.settingItem, { backgroundColor: Colors.surface }]}>
-            <View style={styles.settingLeft}>
-              <View style={[styles.iconContainer, { backgroundColor: Colors.primaryLight + '20' }]}>
-                <Bell color={Colors.primary} size={20} />
-              </View>
-              <View>
-                <Text style={[styles.settingLabel, { color: Colors.textSecondary }]}>Notificaciones Push</Text>
-                <Text style={[styles.settingValue, { color: Colors.text }]}>
-                  {notificationsEnabled ? 'Activadas' : 'Desactivadas'}
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={handleNotificationsToggle}
-              trackColor={{ false: Colors.border, true: Colors.primary }}
-              thumbColor={Colors.surface}
-            />
-          </View>
-          
-          {expoPushToken && (
-            <Text style={[styles.tokenText, { color: Colors.textLight }]}>
-              Token: {expoPushToken.slice(0, 20)}...
-            </Text>
-          )}
         </View>
 
         <View style={styles.section}>
@@ -288,10 +249,5 @@ const styles = StyleSheet.create({
   phoneText: {
     fontSize: 18,
     fontWeight: 'bold' as const,
-  },
-  tokenText: {
-    fontSize: 12,
-    marginTop: 8,
-    fontFamily: 'monospace',
   },
 });

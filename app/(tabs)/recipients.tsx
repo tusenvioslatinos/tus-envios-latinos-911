@@ -38,10 +38,12 @@ export default function RecipientsScreen() {
   };
 
   const renderRecipient = ({ item }: { item: Recipient }) => {
-    const cardTypes: string[] = [];
-    if (item.cards?.CLASICA) cardTypes.push('CLASICA');
-    if (item.cards?.MLC) cardTypes.push('MLC');
-    if (item.cards?.CUP) cardTypes.push('CUP');
+    const formatCardNumber = (num: string) => {
+      if (num.length === 16) {
+        return `${num.slice(0, 4)}-${num.slice(4, 8)}-${num.slice(8, 12)}-${num.slice(12)}`;
+      }
+      return num;
+    };
 
     return (
       <View style={styles.recipientCard}>
@@ -51,20 +53,57 @@ export default function RecipientsScreen() {
           </View>
           <View style={styles.recipientDetails}>
             <Text style={styles.recipientName}>{item.name}</Text>
+            
             <View style={styles.detailRow}>
               <Phone color={Colors.textSecondary} size={14} />
               <Text style={styles.detailText}>{item.phone}</Text>
             </View>
+
+            {item.address && (
+              <View style={styles.detailRow}>
+                <MapPin color={Colors.textSecondary} size={14} />
+                <Text style={styles.detailText}>{item.address}</Text>
+              </View>
+            )}
+
+            {item.municipality && (
+              <View style={styles.detailRow}>
+                <MapPin color={Colors.textSecondary} size={14} />
+                <Text style={styles.detailText}>{item.municipality}</Text>
+              </View>
+            )}
+
             {item.province && (
               <View style={styles.detailRow}>
                 <MapPin color={Colors.textSecondary} size={14} />
                 <Text style={styles.detailText}>{item.province}</Text>
               </View>
             )}
-            {cardTypes.length > 0 && (
+
+            {item.cards?.CLASICA && (
               <View style={styles.detailRow}>
                 <CreditCard color={Colors.textSecondary} size={14} />
-                <Text style={styles.detailText}>{cardTypes.join(', ')}</Text>
+                <Text style={styles.detailText}>
+                  CLASICA: {formatCardNumber(item.cards.CLASICA.number.replace(/-/g, ''))}
+                </Text>
+              </View>
+            )}
+
+            {item.cards?.MLC && (
+              <View style={styles.detailRow}>
+                <CreditCard color={Colors.textSecondary} size={14} />
+                <Text style={styles.detailText}>
+                  MLC: {formatCardNumber(item.cards.MLC.number.replace(/-/g, ''))}
+                </Text>
+              </View>
+            )}
+
+            {item.cards?.CUP && (
+              <View style={styles.detailRow}>
+                <CreditCard color={Colors.textSecondary} size={14} />
+                <Text style={styles.detailText}>
+                  CUP: {formatCardNumber(item.cards.CUP.number.replace(/-/g, ''))}
+                </Text>
               </View>
             )}
           </View>

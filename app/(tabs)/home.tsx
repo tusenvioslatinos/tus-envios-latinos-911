@@ -62,7 +62,7 @@ export default function HomeScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Tus Envíos Latinos' }} />
+      <Stack.Screen options={{ title: 'Servicios' }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.welcomeContainer}>

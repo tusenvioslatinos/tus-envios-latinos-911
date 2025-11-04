@@ -26,7 +26,6 @@ export default function RemittanceCardScreen() {
   const [showAddCardModal, setShowAddCardModal] = useState(false);
   const [pendingRecipient, setPendingRecipient] = useState<Recipient | null>(null);
   const [cardNumber, setCardNumber] = useState('');
-  const [cardType, setCardType] = useState('');
 
   const currencySymbol = CURRENCY_SYMBOLS[currency];
 
@@ -65,7 +64,6 @@ export default function RemittanceCardScreen() {
         ...pendingRecipient.cards,
         [selectedCurrency]: {
           number: cardNumber.trim(),
-          type: cardType.trim() || undefined,
         },
       };
 
@@ -80,7 +78,6 @@ export default function RemittanceCardScreen() {
       setShowAddCardModal(false);
       setPendingRecipient(null);
       setCardNumber('');
-      setCardType('');
       
       Alert.alert('Éxito', `Tarjeta ${selectedCurrency} agregada correctamente`);
     } catch (error) {
@@ -93,7 +90,6 @@ export default function RemittanceCardScreen() {
     setShowAddCardModal(false);
     setPendingRecipient(null);
     setCardNumber('');
-    setCardType('');
   };
 
   const validate = () => {
@@ -276,13 +272,6 @@ export default function RemittanceCardScreen() {
               keyboardType="numeric"
               maxLength={19}
               required
-            />
-
-            <FormInput
-              label="Tipo de Tarjeta (opcional)"
-              placeholder="Débito, Crédito, etc."
-              value={cardType}
-              onChangeText={setCardType}
             />
 
             <View style={styles.modalButtons}>

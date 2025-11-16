@@ -8,7 +8,7 @@ const app = new Hono();
 
 app.use("*", cors());
 
-app.all(
+app.use(
   "/api/trpc/*",
   trpcServer({
     endpoint: "/api/trpc",

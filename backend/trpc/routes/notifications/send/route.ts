@@ -8,7 +8,7 @@ const sendNotificationSchema = z.object({
   data: z.record(z.string(), z.any()).optional(),
 });
 
-export const sendNotificationProcedure = publicProcedure
+const sendNotificationRoute = publicProcedure
   .input(sendNotificationSchema)
   .mutation(async ({ input }) => {
     const { expoPushToken, title, body, data } = input;
@@ -43,3 +43,5 @@ export const sendNotificationProcedure = publicProcedure
       throw new Error('Failed to send push notification');
     }
   });
+
+export default sendNotificationRoute;

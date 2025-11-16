@@ -4,8 +4,17 @@
   "version": "1.0.0",
   "scripts": {
     "start": "bunx rork start -p 34z6c325dcpuojgjmfr7a --tunnel",
+    "start:lan": "bunx rork start -p 34z6c325dcpuojgjmfr7a --lan",
+    "start:localhost": "bunx rork start -p 34z6c325dcpuojgjmfr7a",
+    "start:clear": "bunx rork start -p 34z6c325dcpuojgjmfr7a --tunnel --clear",
+    "start:lan:clear": "bunx rork start -p 34z6c325dcpuojgjmfr7a --lan --clear",
     "start-web": "bunx rork start -p 34z6c325dcpuojgjmfr7a --web --tunnel",
+    "start-web:lan": "bunx rork start -p 34z6c325dcpuojgjmfr7a --web --lan",
     "start-web-dev": "DEBUG=expo* bunx rork start -p 34z6c325dcpuojgjmfr7a --web --tunnel",
+    "server": "bun run server.ts",
+    "server:dev": "bun --watch server.ts",
+    "clean:cache": "powershell -ExecutionPolicy Bypass -File ./clean-cache.ps1",
+    "clean:metro": "bunx expo start --clear",
     "lint": "expo lint"
   },
   "dependencies": {
@@ -38,6 +47,8 @@
     "expo-symbols": "~1.0.7",
     "expo-system-ui": "~6.0.8",
     "expo-web-browser": "^15.0.9",
+    "firebase": "^12.5.0",
+    "firebase-admin": "^13.5.0",
     "hono": "^4.10.4",
     "lucide-react-native": "^0.475.0",
     "nativewind": "^4.1.23",

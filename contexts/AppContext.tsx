@@ -2,6 +2,10 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Currency, Recipient, Order, ThemeMode } from '@/types';
+import { trpcClient } from '@/lib/trpc';
+import { createTRPCProxyClient, httpLink } from '@trpc/client';
+import superjson from 'superjson';
+import type { AppRouter } from '@/backend/trpc/app-router';
 
 const STORAGE_KEYS = {
   RECIPIENTS: '@recipients',
@@ -113,16 +117,83 @@ export const [AppProvider, useApp] = createContextHook(() => {
   };
 
   const addOrder = useCallback(async (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
-    const newOrder: Order = {
-      ...order,
-      id: generateOrderId(),
-      status: 'completed',
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [newOrder, ...orders];
-    setOrders(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
-    return newOrder;
+    try {
+      // Primero guardar localmente (para respuesta rápida)
+      const localOrder: Order = {
+        ...order,
+        id: generateOrderId(),
+        status: 'pending', // Inicialmente pending hasta que se confirme en Firebase
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [localOrder, ...orders];
+      setOrders(updated);
+      await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+
+      // Luego guardar en Firebase vía tRPC
+      try {
+        // Obtener la URL base del backend
+        const getBaseUrl = () => {
+          // Priorizar variable de entorno, luego localhost por defecto
+          return process.env.EXPO_PUBLIC_RORK_API_BASE_URL || "http://localhost:3000";
+        };
+
+        const baseUrl = getBaseUrl();
+        const apiUrl = `${baseUrl}/api/trpc`;
+        
+        console.log('[AppContext] Sending order to backend:', apiUrl);
+
+        // Crear cliente tRPC para esta llamada
+        const client = createTRPCProxyClient<AppRouter>({
+          links: [
+            httpLink({
+              url: apiUrl,
+              transformer: superjson,
+            }),
+          ],
+        });
+
+        const firebaseOrder = await client.orders.create.mutate({
+          type: order.type,
+          recipientData: JSON.stringify(order.recipient), // Convertir objeto a string JSON
+          amount: order.amount,
+          currency: order.currency,
+          senderName: order.senderName,
+          senderPhone: order.senderPhone,
+          senderEmail: order.senderEmail,
+          senderCountry: order.senderCountry,
+          details: order.details ? JSON.stringify(order.details) : undefined,
+        });
+
+        console.log('[AppContext] ✅ Order saved to Firebase:', firebaseOrder.id);
+        
+        // Actualizar el orden local con el ID de Firebase
+        const finalOrder: Order = {
+          ...localOrder,
+          id: firebaseOrder.id,
+          status: firebaseOrder.status,
+        };
+        const finalUpdated = orders.map(o => o.id === localOrder.id ? finalOrder : o);
+        setOrders(finalUpdated);
+        await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(finalUpdated));
+        
+        return finalOrder;
+      } catch (firebaseError: any) {
+        console.error('[AppContext] ❌ Error saving to Firebase:', firebaseError);
+        console.error('[AppContext] Error details:', {
+          message: firebaseError?.message,
+          code: firebaseError?.code,
+          cause: firebaseError?.cause,
+          stack: firebaseError?.stack,
+        });
+        // Si falla Firebase, mantener el orden local pero marcar como error
+        console.warn('[AppContext] ⚠️ Order saved locally only due to Firebase error');
+        console.warn('[AppContext] Backend URL:', process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://34z6c325dcpuojgjmfr7a.rork.run');
+        return localOrder;
+      }
+    } catch (error) {
+      console.error('[AppContext] Error creating order:', error);
+      throw error;
+    }
   }, [orders]);
 
   const updateCurrency = useCallback(async (newCurrency: Currency) => {

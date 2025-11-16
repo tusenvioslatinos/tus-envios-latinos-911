@@ -38,7 +38,7 @@ async function main() {
   // Datos mínimos de prueba
   const now = Date.now();
   const testOrder = {
-    type: 'cash' as const,
+    type: 'remittance-cash' as const,
     recipientData: JSON.stringify({ name: 'Test Recipient', province: 'Test', municipality: 'Test' }),
     amount: 10,
     currency: 'USD',

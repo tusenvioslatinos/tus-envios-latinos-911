@@ -50,6 +50,8 @@
     "firebase": "^12.5.0",
     "firebase-admin": "^13.5.0",
     "hono": "^4.10.4",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react-native": "^0.475.0",
     "nativewind": "^4.1.23",
     "react": "19.1.0",
